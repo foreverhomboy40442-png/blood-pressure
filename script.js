@@ -83,13 +83,14 @@ function refreshDisplay() {
     updateChart(filtered); calculateSummary(filtered);
 }
 
+// 優化：依照要求格式顯示平均值，且確保同一行
 function calculateSummary(filtered) {
     const avgText = document.getElementById('avg-text');
     const tipContent = document.getElementById('tip-content');
-    if (filtered.length === 0) { avgText.innerText = "期待您的記錄"; tipContent.innerText = "開始記錄，讓我們給您健康建議！"; return; }
+    if (filtered.length === 0) { avgText.innerText = "尚未有紀錄數據"; tipContent.innerText = "開始記錄，讓我們給您健康建議！"; return; }
     const avgSys = Math.round(filtered.reduce((acc, r) => acc + r.sys, 0) / filtered.length);
     const avgDia = Math.round(filtered.reduce((acc, r) => acc + r.dia, 0) / filtered.length);
-    avgText.innerText = `平均值：${avgSys}/${avgDia} mmHg`;
+    avgText.innerText = `平均值 ${avgSys}/${avgDia} mmHg`; 
     if (avgSys >= 140 || avgDia >= 90) { tipContent.innerText = "⚠️ 平均數值偏高：請注意清淡飲食，建議與醫師聊聊喔。"; }
     else if (avgSys >= 130 || avgDia >= 80) { tipContent.innerText = "🟡 數值稍微偏高：最近勞累嗎？早點睡覺對血壓很有幫助！"; }
     else if (avgSys <= 90 || avgDia <= 60) { tipContent.innerText = "🔵 數值稍微偏低：起身請放慢，多補充水分與營養喔。"; }
@@ -111,12 +112,10 @@ function filterRecordsByRange(records) {
     return { filtered, start: s.toLocaleDateString('zh-TW'), end: e.toLocaleDateString('zh-TW') };
 }
 
-// PDF 最終優化版本：解決空白第一頁與置中偏移
 async function exportPDF() {
     const btn = document.querySelector('.btn-pdf-large'); btn.innerText = "製作中...";
     document.getElementById('pdf-range-display').innerText = document.getElementById('card-date-display').innerText;
     const tableBody = document.getElementById('pdf-table-body');
-    
     if (currentFilteredData.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="4" style="padding:30px; border:1px solid #000; text-align:center;">尚未有紀錄數據</td></tr>';
     } else {
@@ -124,28 +123,19 @@ async function exportPDF() {
             <tr style="border-bottom: 2px solid #000; page-break-inside: avoid;">
                 <td style="border: 2px solid #000; padding: 15px; text-align: center; white-space: nowrap;">${r.date}</td>
                 <td style="border: 2px solid #000; padding: 15px; text-align: center; white-space: nowrap;">${r.type === 'morning' ? '早晨' : '晚間'}</td>
-                <td style="border: 2px solid #000; padding: 15px; text-align: center; font-weight: bold; font-size: 22px; white-space: nowrap;">${r.sys} / ${r.dia}</td>
+                <td style="border: 2px solid #000; padding: 15px; text-align: center; font-weight: bold; font-size: 20px; white-space: nowrap;">${r.sys} / ${r.dia}</td>
                 <td style="border: 2px solid #000; padding: 15px; text-align: center; white-space: nowrap;">${r.pulse}</td>
             </tr>`).join('');
     }
-    
     const element = document.getElementById('pdf-template');
     const opt = { 
         margin: [10, 10, 10, 10], 
         filename: `血壓記錄報表_${userId}.pdf`, 
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-            scale: 2, 
-            useCORS: true, 
-            windowWidth: 800, // 鎖定寬度確保置中
-            scrollY: 0, 
-            y: 0, // 強制座標回歸原點，解決空白第一頁
-            x: 0 
-        },
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 750, scrollY: 0, y: 0, x: 0, scrollX: 0 },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all'] }
     };
-
     try { await html2pdf().set(opt).from(element).save(); } finally { btn.innerText = "產出 PDF 報表"; }
 }
 

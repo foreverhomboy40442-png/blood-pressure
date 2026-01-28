@@ -31,11 +31,24 @@ body { margin: 0; font-family: -apple-system, "Microsoft JhengHei", sans-serif; 
 .btn-apply-fancy { width: 100%; background: var(--blue-dark); color: white; border: none; padding: 14px; border-radius: 50px; font-weight: 800; cursor: pointer; }
 .large-btn-text { font-size: 1.35rem !important; }
 
-.summary-card { background: #fff; padding: 25px; border-radius: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; margin-bottom: 15px; }
-.summary-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f8f8f8; padding-bottom: 10px; margin-bottom: 15px; }
-.header-date { font-size: 0.8rem; color: #aaa; font-weight: 700; }
-.avg-main-text { font-size: 1.8rem; font-weight: 900; color: #333; margin: 10px 0; text-align: center; }
-.health-tip { margin-top: 20px; padding: 18px; background: #FFF9F0; border-radius: 20px; text-align: left; border: 1px solid #FFE6C7; }
+/* 優化：摘要卡片佈局 */
+.summary-card { background: #fff; padding: 20px; border-radius: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; margin-bottom: 15px; }
+.summary-header-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 10px; border-bottom: 1px solid #f8f8f8; }
+.summary-header-top h3 { margin: 0; font-size: 1.15rem; }
+.header-date-right { font-size: 0.75rem; color: #999; font-weight: 700; }
+
+/* 強制單行鎖定 */
+.avg-content-row { width: 100%; margin: 5px 0; text-align: left; }
+.avg-main-text-fixed { 
+    font-size: 1.5rem; 
+    font-weight: 900; 
+    color: #333; 
+    white-space: nowrap; /* 核心：不換行 */
+    overflow: hidden;
+    text-overflow: ellipsis; 
+}
+
+.health-tip { margin-top: 15px; padding: 18px; background: #FFF9F0; border-radius: 20px; text-align: left; border: 1px solid #FFE6C7; }
 .tip-title { font-weight: 800; color: #D97706; margin-bottom: 8px; font-size: 1rem; }
 .tip-content { font-size: 0.95rem; color: #92400E; line-height: 1.6; }
 
@@ -48,7 +61,6 @@ body { margin: 0; font-family: -apple-system, "Microsoft JhengHei", sans-serif; 
 .giant-input { width: 100%; padding: 20px; border-radius: 20px; border: 2.5px solid #eee; font-size: 1.5rem; text-align: center; margin-bottom: 25px; outline: none; background: #fafafa; }
 .btn-warm-save { width: 100%; background: linear-gradient(135deg, var(--blue-soft), var(--blue-dark)); color: white; border: none; padding: 20px; border-radius: 50px; font-size: 1.3rem; font-weight: 800; cursor: pointer; }
 
-/* 產出 PDF 報表按鈕：加大且不換行 */
 .pdf-btn-style { flex: 1.3 !important; padding: 18px 5px !important; font-size: 1.15rem !important; font-weight: 900 !important; white-space: nowrap !important; }
 
 .container { width: 92%; max-width: 450px; }
