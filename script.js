@@ -111,12 +111,12 @@ function filterRecordsByRange(records) {
     return { filtered, start: s.toLocaleDateString('zh-TW'), end: e.toLocaleDateString('zh-TW') };
 }
 
-// PDF 終極置中與置頂修正案
+// PDF 最終優化版本：解決空白第一頁與置中偏移
 async function exportPDF() {
-    const btn = document.querySelector('.btn-pdf-large'); btn.innerText = "⏳ 製作中...";
+    const btn = document.querySelector('.btn-pdf-large'); btn.innerText = "製作中...";
     document.getElementById('pdf-range-display').innerText = document.getElementById('card-date-display').innerText;
-    
     const tableBody = document.getElementById('pdf-table-body');
+    
     if (currentFilteredData.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="4" style="padding:30px; border:1px solid #000; text-align:center;">尚未有紀錄數據</td></tr>';
     } else {
@@ -137,17 +137,16 @@ async function exportPDF() {
         html2canvas: { 
             scale: 2, 
             useCORS: true, 
-            windowWidth: 720, // 鎖定抓取寬度與模板一致，解決置中偏移
-            scrollX: 0, 
-            scrollY: 0,
-            x: 0,
-            y: 0 
+            windowWidth: 800, // 鎖定寬度確保置中
+            scrollY: 0, 
+            y: 0, // 強制座標回歸原點，解決空白第一頁
+            x: 0 
         },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['avoid-all'] }
     };
 
-    try { await html2pdf().set(opt).from(element).save(); } catch(e) { alert("PDF 產出異常"); } finally { btn.innerText = "產出 PDF 報表"; }
+    try { await html2pdf().set(opt).from(element).save(); } finally { btn.innerText = "產出 PDF 報表"; }
 }
 
 function shareToLine() {

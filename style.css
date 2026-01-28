@@ -1,6 +1,4 @@
-:root {
-    --morning-mint: #D4F1E8; --evening-peach: #FFE5E7; --green-done: #56C596; --blue-soft: #A2D2FF; --blue-dark: #5DA7FF;
-}
+:root { --morning-mint: #D4F1E8; --evening-peach: #FFE5E7; --green-done: #56C596; --blue-soft: #A2D2FF; --blue-dark: #5DA7FF; }
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 body { margin: 0; font-family: -apple-system, "Microsoft JhengHei", sans-serif; background: #FFF; display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
 
@@ -8,7 +6,6 @@ body { margin: 0; font-family: -apple-system, "Microsoft JhengHei", sans-serif; 
 .user-bar h1 { margin: 0; font-size: 1.5rem; flex-shrink: 0; }
 #user-info { font-size:0.85rem; color:#666; background:#f0f0f0; padding:8px 16px; border-radius:20px; font-weight:700; cursor:pointer; margin-left: auto; }
 
-/* 大箭頭優化 */
 .btn-arrow-large { background: #f0f0f0; border: none; width: 48px; height: 48px; border-radius: 50%; font-size: 1.6rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
 .card-grid { display: flex; gap: 12px; margin-bottom: 20px; width: 100%; }
@@ -46,19 +43,13 @@ body { margin: 0; font-family: -apple-system, "Microsoft JhengHei", sans-serif; 
 .modal-card { background: #fff; width: 90%; max-width: 400px; padding: 40px 30px; border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); text-align: center; }
 .modal-icon { font-size: 4rem; margin-bottom: 15px; }
 
-/* 歡迎頁標語強制單行 */
-.large-title { 
-    font-size: 1.7rem; 
-    font-weight: 900; 
-    margin-bottom: 12px; 
-    white-space: nowrap; 
-}
+.large-title { font-size: 1.7rem; font-weight: 900; margin-bottom: 12px; white-space: nowrap; }
 .warm-text { color: #888; font-size: 1.1rem; line-height: 1.5; margin-bottom: 25px; }
 .giant-input { width: 100%; padding: 20px; border-radius: 20px; border: 2.5px solid #eee; font-size: 1.5rem; text-align: center; margin-bottom: 25px; outline: none; background: #fafafa; }
 .btn-warm-save { width: 100%; background: linear-gradient(135deg, var(--blue-soft), var(--blue-dark)); color: white; border: none; padding: 20px; border-radius: 50px; font-size: 1.3rem; font-weight: 800; cursor: pointer; }
 
-/* PDF 按鈕優化 */
-.pdf-btn-style { flex: 1.2 !important; padding: 18px 5px !important; font-size: 1.1rem !important; font-weight: 900 !important; white-space: nowrap !important; }
+/* 產出 PDF 報表按鈕：加大且不換行 */
+.pdf-btn-style { flex: 1.3 !important; padding: 18px 5px !important; font-size: 1.15rem !important; font-weight: 900 !important; white-space: nowrap !important; }
 
 .container { width: 92%; max-width: 450px; }
 .date-stepper { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; }
