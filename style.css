@@ -17,7 +17,7 @@ body { margin: 0; font-family: -apple-system, sans-serif; background: #FFF; disp
 .icon { font-size: 2.2rem; display: block; opacity: 0.4; }
 .log-card.completed .icon { opacity: 1; }
 
-/* 篩選按鈕優化：確保同一行並放大加粗 */
+/* 頂部篩選按鈕：大字加粗，維持一行 */
 .filter-buttons { 
     display: grid; 
     grid-template-columns: repeat(4, 1fr); 
@@ -38,32 +38,44 @@ body { margin: 0; font-family: -apple-system, sans-serif; background: #FFF; disp
 }
 .filter-buttons button.active { background: var(--blue-soft); color: white; border-color: var(--blue-soft); }
 
-/* 修正：自訂查詢面板跑版問題 */
-.custom-date-panel { display: none; background: #fff; padding: 20px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #eee; }
+/* 自訂查詢面板：緊湊型並排設計 */
+.custom-date-panel { display: none; background: #fff; padding: 25px 15px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #eee; }
 .panel-header { font-weight: 900; font-size: 1.1rem; margin-bottom: 15px; text-align: center; color: #333; }
-.date-grid { 
-    display: grid; 
-    grid-template-columns: 1fr auto 1fr; /* 修正欄位偏移核心 */
-    align-items: center; 
-    gap: 10px; 
-    margin-bottom: 20px; 
-}
-.date-sep { font-weight: 900; padding-top: 15px; font-size: 1rem; color: #999; }
-.date-input-group label { display: block; font-size: 0.8rem; color: #999; margin-bottom: 5px; font-weight: 700; }
-.date-input-group input { width: 100%; padding: 12px 5px; border-radius: 12px; border: 1px solid #DDD; font-size: 0.95rem; text-align: center; }
-.btn-apply-fancy { width: 100%; background: var(--blue-dark); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: 900; font-size: 1.1rem; cursor: pointer; }
 
+.date-compact-row { 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    gap: 8px; 
+    margin-bottom: 20px;
+}
+.date-sep { font-weight: 900; font-size: 1.1rem; color: #666; }
+
+/* 輸入框優化：框框高度固定，內部字體放大 */
+.small-date-input { 
+    width: 140px; 
+    height: 45px; 
+    padding: 0 8px; 
+    border-radius: 12px; 
+    border: 2px solid #EEE; 
+    font-size: 1.05rem; 
+    font-weight: 900;
+    text-align: center;
+    background: #fdfdfd;
+    color: #333;
+}
+.btn-apply-fancy { width: 100%; background: var(--blue-dark); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: 900; font-size: 1.2rem; cursor: pointer; }
+
+/* 分析與歷史區域 */
 .action-buttons { display: flex; gap: 10px; margin: 20px 0 40px; width: 100%; align-items: center; }
 .btn-pdf-large { flex: 1; background: #555; color: white; border: none; padding: 15px; border-radius: 50px; font-size: 0.9rem; font-weight: 800; white-space: nowrap; cursor: pointer; }
 .btn-share-large { flex: 2; background: #06C755; color: white; border: none; padding: 18px; border-radius: 50px; font-size: 1.4rem; font-weight: 900; cursor: pointer; }
-
 .summary-card { background: #fff; padding: 25px; border-radius: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); margin-bottom: 15px; border: 1px solid #f0f0f0; }
 .avg-main-text { font-size: 1.4rem; font-weight: 800; color: #333; margin: 0; }
 .health-tip { margin-top: 20px; border-radius: 16px; padding: 18px; display: none; text-align: left; border: 3px solid transparent; }
 .tip-warning, .tip-danger { border-color: #FF5252; }
 .tip-normal { border-color: var(--blue-soft); background: #F0F7FF; }
 .tip-title { color: #FF5252; font-weight: 900; font-size: 1.2rem; }
-
 .chart-container { background: #fff; border-radius: 20px; padding: 10px; height: 260px; margin-bottom: 25px; }
 .history-item { background: #f9f9f9; padding: 18px; border-radius: 18px; margin-bottom: 12px; border-left: 6px solid var(--blue-soft); }
 

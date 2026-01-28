@@ -27,6 +27,7 @@ function updateTargetDateDisplay() {
     document.getElementById('target-date-display').innerText = dateStr;
 }
 
+// 數據儲存邏輯：支援每日早晚去重
 function saveData() {
     const sys = parseInt(document.getElementById('sys').value, 10);
     const dia = parseInt(document.getElementById('dia').value, 10);
@@ -39,6 +40,8 @@ function saveData() {
     
     const dateKey = currentTargetDate.toLocaleDateString('zh-TW');
     let records = JSON.parse(localStorage.getItem('bp_records') || '[]');
+
+    // 去重處理：移除同一天同一類型的舊紀錄
     records = records.filter(r => !(r.date === dateKey && r.type === currentType));
 
     const newRecord = {
@@ -80,9 +83,6 @@ function calculateSummary(filtered) {
     avgText.innerText = `${label}：${avgSys}/${avgDia} mmHg`;
     subAvgText.innerHTML = `統計筆數：${count} 筆 | 平均心率：${avgPulse} bpm`;
 
-    document.getElementById('pdf-avg-main').innerText = avgText.innerText;
-    document.getElementById('pdf-avg-sub').innerHTML = subAvgText.innerHTML;
-
     const advice = getAdvice(avgSys, avgDia);
     tipBox.querySelector('.tip-title').innerText = advice.title;
     tipBox.querySelector('.tip-content').innerText = advice.content;
@@ -97,6 +97,7 @@ function refreshDisplay() {
     const rangeText = (currentRange === 'today') ? `${start}` : `${start} ~ ${end}`;
     document.getElementById('card-date-display').innerText = rangeText;
     
+    // 歷史紀錄：移除括號文字
     document.getElementById('history-list').innerHTML = filtered.slice(0, 5).map(r => `
         <div class="history-item">
             <div style="font-size:0.85rem;color:#999">${r.date}</div>
@@ -110,16 +111,13 @@ function refreshDisplay() {
     calculateSummary(filtered);
 }
 
-// 修正：強化 PDF 生成邏輯，解決跑版與斷頁問題
+// PDF 產出優化：解決電腦下載跑版
 async function exportPDF() {
     const btn = document.querySelector('.btn-pdf-large');
-    if (typeof html2pdf === 'undefined') { alert("載入中..."); return; }
-    if (currentFilteredData.length === 0) { alert("無資料。"); return; }
-    
+    if (typeof html2pdf === 'undefined') return;
     btn.innerText = "⏳ 格式化報表中...";
     document.getElementById('pdf-range').innerText = `報告區間：${document.getElementById('card-date-display').innerText}`;
     const tableBody = document.getElementById('pdf-table-body');
-    
     tableBody.innerHTML = currentFilteredData.sort((a, b) => b.timestamp - a.timestamp).map(r => `
         <tr style="page-break-inside: avoid; border-bottom: 1px solid #000;">
             <td style="border: 1px solid #000; padding: 12px;">${r.date}</td>
@@ -129,22 +127,15 @@ async function exportPDF() {
         </tr>`).join('');
 
     const element = document.getElementById('pdf-template');
-    
     const opt = { 
         margin: [10, 5], 
         filename: `血壓健康報告_${new Date().toLocaleDateString()}.pdf`, 
         image: { type: 'jpeg', quality: 1 }, 
-        html2canvas: { 
-            scale: 2, 
-            useCORS: true, 
-            scrollY: 0, 
-            windowWidth: 1000 /* 鎖定寬度模擬，解決電腦下載斷一半問題 */
-        }, 
+        html2canvas: { scale: 3, useCORS: true, scrollY: 0, windowWidth: 800 }, 
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] }
     };
-
-    try { await html2pdf().set(opt).from(element).save(); } catch (e) { alert("下載失敗。"); } finally { btn.innerText = "📄 產出 PDF 報表"; }
+    try { await html2pdf().set(opt).from(element).save(); } finally { btn.innerText = "📄 產出 PDF 報表"; }
 }
 
 function filterRecordsByRange(records) {
@@ -176,12 +167,14 @@ function checkTodayStatus() {
     if (mRec) { mCard.classList.add('completed', 'morning-done'); document.getElementById('morning-status').innerText = `已填: ${mRec.sys}/${mRec.dia}`; } else { mCard.classList.remove('completed', 'morning-done'); document.getElementById('morning-status').innerText = '尚未填寫'; }
     if (eRec) { eCard.classList.add('completed', 'evening-done'); document.getElementById('evening-status').innerText = `已填: ${eRec.sys}/${eRec.dia}`; } else { eCard.classList.remove('completed', 'evening-done'); document.getElementById('evening-status').innerText = '尚未填寫'; }
 }
+
 function shareToLine() { 
     const tipTitle = document.querySelector('.tip-title').innerText;
     const tipContent = document.querySelector('.tip-content').innerText;
     const msg = `【心跳守護】血壓回報\n📊 查詢日期：${document.getElementById('card-date-display').innerText}\n📈 ${document.getElementById('avg-text').innerText}\n💡 建議：${tipTitle} - ${tipContent}\n\n隨時追蹤，守護健康！`; 
     window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank'); 
 }
+
 function updateChart(filtered) { 
     const ctx = document.getElementById('bpChart').getContext('2d'); if (bpChart) bpChart.destroy(); if (filtered.length === 0) return; 
     const sorted = [...filtered].sort((a, b) => a.timestamp - b.timestamp); 
@@ -197,6 +190,8 @@ function updateChart(filtered) {
         options: { responsive: true, maintainAspectRatio: false } 
     }); 
 }
+
+// 判定邏輯：五組白話文建議
 function getAdvice(sys, dia) { 
     if (sys < 90 || dia < 60) return { title: "📉 數值偏低", content: "請注意是否頭暈，建議補充水分或諮詢醫師。", class: "tip-danger" };
     if (sys < 120 && dia < 80) return { title: "✅ 健康達標", content: "數值很漂亮！請繼續維持規律作息與運動。", class: "tip-normal" };
