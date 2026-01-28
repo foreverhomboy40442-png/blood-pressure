@@ -114,7 +114,7 @@ async function exportPDF() {
         margin: [10, 5], 
         filename: `血壓健康報告_${new Date().toLocaleDateString()}.pdf`, 
         image: { type: 'jpeg', quality: 1 }, 
-        html2canvas: { scale: 3, useCORS: true, scrollY: 0, windowWidth: 800 }, 
+        html2canvas: { scale: 2, useCORS: true, scrollY: 0, windowWidth: 800 }, 
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] }
     };
@@ -138,8 +138,31 @@ function filterRecordsByRange(records) {
 function openModal(type) { currentType = type; document.getElementById('modal-title').innerText = (type === 'morning' ? '☀️ 早晨紀錄' : '🌙 晚間紀錄'); document.getElementById('log-modal').style.display = 'flex'; }
 function closeModal() { document.getElementById('log-modal').style.display = 'none'; document.querySelectorAll('#log-modal input').forEach(i => i.value = ''); document.getElementById('btn-save').classList.remove('can-save'); }
 function setupInputListeners() { const inputs = document.querySelectorAll('#log-modal input'); const btn = document.getElementById('btn-save'); inputs.forEach(i => i.addEventListener('input', () => { btn.classList.toggle('can-save', Array.from(inputs).every(inp => inp.value.trim() !== '')); })); }
-function setRange(range) { currentRange = range; document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active')); document.getElementById(`btn-${range}`).classList.add('active'); document.getElementById('custom-date-panel').style.display = 'none'; refreshDisplay(); }
-function toggleCustomRange() { const p = document.getElementById('custom-date-panel'); p.style.display = (p.style.display === 'block') ? 'none' : 'block'; }
+
+// 核心修正：點選「本日/週/月」時，清除「自訂查詢」按鈕的選取狀態
+function setRange(range) { 
+    currentRange = range; 
+    document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active')); 
+    document.getElementById(`btn-${range}`).classList.add('active'); 
+    document.getElementById('custom-date-panel').style.display = 'none'; 
+    refreshDisplay(); 
+}
+
+// 核心修正：切換自訂查詢面板時，清除其他按鈕樣式，並正確鎖定選取狀態
+function toggleCustomRange() { 
+    const p = document.getElementById('custom-date-panel'); 
+    const btnCustom = document.getElementById('btn-custom');
+    if (p.style.display === 'block') {
+        p.style.display = 'none';
+        btnCustom.classList.remove('active');
+    } else {
+        // 開啟自訂面板：移除所有本日/週/月按鈕的 active
+        document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active')); 
+        p.style.display = 'block';
+        btnCustom.classList.add('active');
+    }
+}
+
 function applyCustomRange() { currentRange = 'custom'; refreshDisplay(); }
 function checkTodayStatus() {
     const targetKey = currentTargetDate.toLocaleDateString('zh-TW');

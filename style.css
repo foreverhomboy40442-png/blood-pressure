@@ -40,27 +40,20 @@ body { margin: 0; font-family: -apple-system, sans-serif; background: #FFF; disp
 .custom-date-panel { display: none; background: #fff; padding: 25px 15px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #eee; }
 .panel-header { font-weight: 900; font-size: 1.1rem; margin-bottom: 15px; text-align: center; color: #333; }
 
-.date-compact-row { 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    gap: 8px; 
-    margin-bottom: 20px;
-}
+.date-compact-row { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; }
 .date-sep { font-weight: 900; font-size: 1.1rem; color: #666; }
 
-/* 優化：框框不變大，字體縮小至 0.9rem 並設為深灰色，確保單行顯示 */
 .small-date-input { 
     width: 145px; 
     height: 45px; 
     padding: 0 4px; 
     border-radius: 12px; 
     border: 2px solid #EEE; 
-    font-size: 0.9rem; /* 調小字體避免換行 */
+    font-size: 0.9rem; 
     font-weight: 700;
     text-align: center;
     background: #fdfdfd;
-    color: #555; /* 深灰色 */
+    color: #555;
 }
 
 .btn-apply-fancy { width: 100%; background: var(--blue-dark); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: 900; font-size: 1.2rem; cursor: pointer; }
