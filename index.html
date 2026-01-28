@@ -81,16 +81,17 @@
 
     <div id="login-modal" class="custom-login-modal">
         <div class="glass-content">
-            <div class="modal-icon">🔒</div>
-            <h2>雲端帳號登入</h2>
-            <p>輸入代號即可同步 1/26~1/28 數據</p>
+            <div class="modal-icon-wrapper">
+                <div class="pulse-ring"></div>
+                <span class="modal-icon">🩺</span>
+            </div>
+            <h2>歡迎回來</h2>
+            <p>請輸入您的專屬代號<br>我們將為您同步完整的健康日誌</p>
             <div class="input-group">
-                <input type="text" id="login-input" placeholder="請輸入您的帳號代號..." autocomplete="off">
-                <span class="input-hint">💡 建議包含英文與數字以防撞名</span>
+                <input type="text" id="login-input" placeholder="帳號代號 (中/英/數)" autocomplete="off">
             </div>
-            <div class="modal-actions">
-                <button id="confirm-login-btn" class="primary-btn">確認進入</button>
-            </div>
+            <button id="confirm-login-btn" class="primary-btn">開啟雲端同步</button>
+            <div class="input-hint">💡 相同代號可在多個裝置找回所有數據</div>
         </div>
     </div>
 

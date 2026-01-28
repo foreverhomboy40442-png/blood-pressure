@@ -8,13 +8,11 @@ let currentFilteredData = [];
 let userId = localStorage.getItem('bp_user_id');
 
 document.addEventListener('DOMContentLoaded', async () => {
-    // 1. 執行新版磨砂玻璃登入檢查
     await checkUserId();
-    // 2. 初始化畫面
     initApp();
 });
 
-// 新版 UX 登入邏輯：支援本人登入同步，不再自我阻擋
+// PM 優化邏輯：切換/登入時先清空本地，確保資料不混淆
 async function checkUserId() {
     if (userId) {
         document.getElementById('user-info').innerText = `👤 用戶: ${userId}`;
@@ -30,10 +28,10 @@ async function checkUserId() {
     return new Promise((resolve) => {
         btn.onclick = async () => {
             let inputId = input.value.trim();
-            if (inputId === "") { alert("請輸入帳號代號"); return; }
+            if (inputId === "") { alert("請輸入代號"); return; }
 
             btn.disabled = true;
-            btn.innerText = "驗證中...";
+            btn.innerText = "同步數據中...";
 
             try {
                 const response = await fetch(API_URL, {
@@ -43,15 +41,21 @@ async function checkUserId() {
                 const result = await response.json();
 
                 if (result.exists) {
-                    if (confirm(`代號「${inputId}」已有紀錄。\n\n確認是本人要同步 1/26~1/28 等數據嗎？`)) {
+                    if (confirm(`代號「${inputId}」已有雲端紀錄。\n\n確認是本人要同步所有的健康日誌嗎？`)) {
+                        // 本人登入：清空舊快取，準備抓取新帳號雲端資料
+                        localStorage.setItem('bp_records', '[]'); 
                         finishLogin(inputId, modal); resolve();
                     } else {
-                        btn.disabled = false; btn.innerText = "確認進入";
+                        btn.disabled = false; btn.innerText = "開啟雲端同步";
                     }
                 } else {
+                    // 新帳號：也必須清空本地舊資料，確保畫面乾淨
+                    localStorage.setItem('bp_records', '[]'); 
                     finishLogin(inputId, modal); resolve();
                 }
             } catch (e) {
+                // 網路異常保底：清空本地，避免資料錯置
+                localStorage.setItem('bp_records', '[]');
                 finishLogin(inputId, modal); resolve();
             }
         };
@@ -66,8 +70,9 @@ function finishLogin(id, modal) {
 }
 
 function resetUser() {
-    if(confirm("切換帳號會同步不同的雲端數據，確定更換嗎？")) {
+    if(confirm("切換帳號會清除當前本地緩存並同步雲端數據，確定更換嗎？")) {
         localStorage.removeItem('bp_user_id');
+        localStorage.setItem('bp_records', '[]'); // 重置時主動清空
         location.reload();
     }
 }
@@ -87,46 +92,38 @@ async function syncFromCloud() {
         const cloudRecords = await response.json();
         if (cloudRecords && cloudRecords.length > 0) {
             localStorage.setItem('bp_records', JSON.stringify(cloudRecords));
+        } else {
+            localStorage.setItem('bp_records', '[]'); // 雲端沒資料則維持空白
         }
     } catch (e) { console.log("雲端同步中..."); }
     checkTodayStatus();
     refreshDisplay();
 }
 
-// 儲存邏輯優化：先存本地（體感快）+ 背景傳雲端
+// 儲存邏輯 (體感秒存 + 背景同步)
 async function saveData() {
     const sys = parseInt(document.getElementById('sys').value, 10);
     const dia = parseInt(document.getElementById('dia').value, 10);
     const pulse = parseInt(document.getElementById('pulse').value, 10);
-    
     if (isNaN(sys) || isNaN(dia) || isNaN(pulse)) { alert("請輸入數字"); return; }
-    
     const record = {
         timestamp: currentTargetDate.getTime(),
         type: currentType,
         date: currentTargetDate.toLocaleDateString('zh-TW'),
         sys, dia, pulse
     };
-
     let records = JSON.parse(localStorage.getItem('bp_records') || '[]');
     records = records.filter(r => !(r.date === record.date && r.type === record.type));
     records.unshift(record);
     localStorage.setItem('bp_records', JSON.stringify(records));
-
     closeModal();
     refreshDisplay();
     checkTodayStatus();
-
     if (API_URL.startsWith("https")) {
-        fetch(API_URL, {
-            method: 'POST',
-            mode: 'no-cors',
-            body: JSON.stringify({ action: "save", userId: userId, record: record })
-        });
+        fetch(API_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ action: "save", userId: userId, record: record }) });
     }
 }
 
-// UI 輔助邏輯（維持優化版）
 function refreshDisplay() {
     const all = JSON.parse(localStorage.getItem('bp_records') || '[]');
     const { filtered, start, end } = filterRecordsByRange(all);
@@ -146,7 +143,7 @@ function refreshDisplay() {
 
 async function exportPDF() {
     if (/Line/i.test(navigator.userAgent)) {
-        alert("⚠️ LINE 內建瀏覽器限制下載檔案。\n請點選右上角『三個點』，選擇『使用預設瀏覽器開啟』即可下載！"); return;
+        alert("⚠️ LINE 內建瀏覽器無法下載檔案。請點選右上角『三個點』，選擇『使用預設瀏覽器開啟』即可下載！"); return;
     }
     const btn = document.querySelector('.btn-pdf-large');
     btn.innerText = "⏳ 格式化報表中...";
@@ -159,11 +156,7 @@ async function exportPDF() {
             <td style="text-align: center; border: 1px solid #000;">${r.pulse}</td>
         </tr>`).join('');
     const element = document.getElementById('pdf-template');
-    const opt = { 
-        margin: [10, 5], filename: `血壓報告_${userId}.pdf`,
-        html2canvas: { scale: 3, useCORS: true, windowWidth: 1000 }, 
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
-    };
+    const opt = { margin: [10, 5], filename: `血壓報告_${userId}.pdf`, html2canvas: { scale: 3, useCORS: true, windowWidth: 1000 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } };
     try { await html2pdf().set(opt).from(element).save(); } finally { btn.innerText = "📄 產出 PDF 報表"; }
 }
 
@@ -173,29 +166,15 @@ function filterRecordsByRange(records) {
     else if (currentRange === 'week') { s.setDate(now.getDate() - 7); s.setHours(0,0,0,0); }
     else if (currentRange === 'month') { s.setMonth(now.getMonth() - 1); s.setHours(0,0,0,0); }
     else if (currentRange === 'custom') { 
-        const sv = document.getElementById('start-date').value; 
-        const ev = document.getElementById('end-date').value; 
+        const sv = document.getElementById('start-date').value; const ev = document.getElementById('end-date').value; 
         if (sv && ev) { s = new Date(sv); e = new Date(ev); s.setHours(0,0,0,0); e.setHours(23,59,59,999); } 
     }
     const filtered = records.filter(r => r.timestamp >= s.getTime() && r.timestamp <= e.getTime());
     return { filtered, start: s.toLocaleDateString('zh-TW'), end: e.toLocaleDateString('zh-TW') };
 }
 
-function updateChart(filtered) { 
-    const ctx = document.getElementById('bpChart').getContext('2d'); if (bpChart) bpChart.destroy(); if (filtered.length === 0) return; 
-    const sorted = [...filtered].sort((a, b) => a.timestamp - b.timestamp); 
-    bpChart = new Chart(ctx, { type: 'line', data: { labels: sorted.map(r => r.date.slice(5)), datasets: [{ label: '收縮壓', data: sorted.map(r => r.sys), borderColor: '#A2D2FF', tension: 0.3 }, { label: '舒張壓', data: sorted.map(r => r.dia), borderColor: '#FFC2C7', tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } }); 
-}
-
-function calculateSummary(filtered) {
-    const avgText = document.getElementById('avg-text');
-    if (filtered.length === 0) { avgText.innerText = "尚無資料"; return; }
-    const avgSys = Math.round(filtered.reduce((acc, r) => acc + r.sys, 0) / filtered.length);
-    const avgDia = Math.round(filtered.reduce((acc, r) => acc + r.dia, 0) / filtered.length);
-    avgText.innerText = `平均值：${avgSys}/${avgDia} mmHg`;
-    document.getElementById('pdf-avg-main').innerText = avgText.innerText;
-}
-
+function updateChart(filtered) { const ctx = document.getElementById('bpChart').getContext('2d'); if (bpChart) bpChart.destroy(); if (filtered.length === 0) return; const sorted = [...filtered].sort((a, b) => a.timestamp - b.timestamp); bpChart = new Chart(ctx, { type: 'line', data: { labels: sorted.map(r => r.date.slice(5)), datasets: [{ label: '收縮壓', data: sorted.map(r => r.sys), borderColor: '#A2D2FF', tension: 0.3 }, { label: '舒張壓', data: sorted.map(r => r.dia), borderColor: '#FFC2C7', tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } }); }
+function calculateSummary(filtered) { const avgText = document.getElementById('avg-text'); if (filtered.length === 0) { avgText.innerText = "尚無資料"; return; } const avgSys = Math.round(filtered.reduce((acc, r) => acc + r.sys, 0) / filtered.length); const avgDia = Math.round(filtered.reduce((acc, r) => acc + r.dia, 0) / filtered.length); avgText.innerText = `平均值：${avgSys}/${avgDia} mmHg`; document.getElementById('pdf-avg-main').innerText = avgText.innerText; }
 function updateTargetDateDisplay() { document.getElementById('target-date-display').innerText = currentTargetDate.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }); }
 function changeDate(offset) { currentTargetDate.setDate(currentTargetDate.getDate() + offset); updateTargetDateDisplay(); checkTodayStatus(); refreshDisplay(); }
 function openModal(type) { currentType = type; document.getElementById('modal-title').innerText = (type === 'morning' ? '☀️ 早晨紀錄' : '🌙 晚間紀錄'); document.getElementById('log-modal').style.display = 'flex'; }
@@ -214,4 +193,3 @@ function checkTodayStatus() {
     document.getElementById('evening-status').innerText = eRec ? `已填: ${eRec.sys}/${eRec.dia}` : '尚未填寫';
 }
 function shareToLine() { const msg = `【血壓回報】${userId}\n📊 區間：${document.getElementById('card-date-display').innerText}\n📈 ${document.getElementById('avg-text').innerText}`; window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank'); }
-function setupInputListeners() {}
