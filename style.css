@@ -16,25 +16,19 @@ header { text-align: center; padding: 30px 0 10px; }
 .today-tag { background: #f0f0f0; padding: 6px 16px; border-radius: 50px; font-size: 0.85rem; color: #888; display: inline-block; margin-bottom: 10px; }
 .container { width: 92%; max-width: 450px; }
 
-/* --- 紀錄卡片優化：尚未填寫顯示淺色而非白色 --- */
 .card-grid { display: flex; gap: 12px; margin-bottom: 20px; }
 .log-card {
     flex: 1; 
+    background-color: rgba(245, 245, 245, 0.5); 
     border-radius: 20px; 
     padding: 25px 10px; 
     text-align: center; 
-    border: 2px solid transparent; 
+    border: 2px solid #EEE; 
     cursor: pointer; 
     transition: 0.4s;
 }
-
-/* 尚未填寫狀態：帶有淡淡的顏色 */
-.morning { background-color: rgba(212, 241, 232, 0.4); border-color: rgba(212, 241, 232, 0.6); }
-.evening { background-color: rgba(255, 229, 231, 0.4); border-color: rgba(255, 229, 231, 0.6); }
-
 .status-label { font-size: 0.85rem; font-weight: 800; margin-top: 8px; color: #FF5252; }
 
-/* 完成後：實色顯示 */
 .log-card.morning-done { background-color: var(--morning-mint); border-color: #BEE3D7; }
 .log-card.evening-done { background-color: var(--evening-peach); border-color: #FFD1D5; }
 
@@ -42,7 +36,6 @@ header { text-align: center; padding: 30px 0 10px; }
 .icon { font-size: 2.2rem; display: block; opacity: 0.4; transition: 0.3s; }
 .log-card.completed .icon { opacity: 1; }
 
-/* 其餘樣式... (維持不變) */
 .range-info-bar { width: 100%; text-align: center; font-size: 0.85rem; color: #888; margin-bottom: 12px; font-weight: 600; }
 .filter-buttons { display: flex; gap: 5px; margin-bottom: 10px; }
 .filter-buttons button { flex: 1; padding: 12px 5px; border-radius: 12px; border: 1px solid #eee; background: #f8f9fa; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
@@ -63,6 +56,7 @@ header { text-align: center; padding: 30px 0 10px; }
 .tip-content { color: #333; font-weight: normal; font-size: 1rem; line-height: 1.4; }
 .chart-container { background: #fff; border-radius: 20px; padding: 10px; height: 260px; margin-bottom: 25px; }
 .btn-share-large { width: 100%; background: #06C755; color: white; border: none; padding: 20px; border-radius: 50px; font-size: 1.3rem; font-weight: 900; margin-bottom: 40px; }
+
 .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); align-items: center; justify-content: center; z-index: 999; }
 .modal-content { background: white; width: 90%; max-width: 380px; padding: 30px 20px; border-radius: 30px; }
 .input-row { margin-bottom: 18px; }
