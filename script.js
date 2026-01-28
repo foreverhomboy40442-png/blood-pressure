@@ -27,7 +27,6 @@ function updateTargetDateDisplay() {
     document.getElementById('target-date-display').innerText = dateStr;
 }
 
-// 嚴格去重儲存
 function saveData() {
     const sys = parseInt(document.getElementById('sys').value, 10);
     const dia = parseInt(document.getElementById('dia').value, 10);
@@ -111,7 +110,7 @@ function refreshDisplay() {
     calculateSummary(filtered);
 }
 
-// 核心優化：響應式渲染，確保電腦與手機下載 PDF 比例皆為最佳
+// 修正：強化 PDF 生成邏輯，解決跑版與斷頁問題
 async function exportPDF() {
     const btn = document.querySelector('.btn-pdf-large');
     if (typeof html2pdf === 'undefined') { alert("載入中..."); return; }
@@ -123,30 +122,29 @@ async function exportPDF() {
     
     tableBody.innerHTML = currentFilteredData.sort((a, b) => b.timestamp - a.timestamp).map(r => `
         <tr style="page-break-inside: avoid; border-bottom: 1px solid #000;">
-            <td style="border: 1px solid #000; padding: 10px;">${r.date}</td>
-            <td style="border: 1px solid #000; padding: 10px; text-align: center;">${r.type === 'morning' ? '早晨' : '晚間'}</td>
-            <td style="border: 1px solid #000; padding: 10px; text-align: center; font-weight: bold; font-size:20px;">${r.sys} / ${r.dia}</td>
-            <td style="border: 1px solid #000; padding: 10px; text-align: center;">${r.pulse}</td>
+            <td style="border: 1px solid #000; padding: 12px;">${r.date}</td>
+            <td style="border: 1px solid #000; padding: 12px; text-align: center;">${r.type === 'morning' ? '早晨' : '晚間'}</td>
+            <td style="border: 1px solid #000; padding: 12px; text-align: center; font-weight: bold; font-size:24px;">${r.sys} / ${r.dia}</td>
+            <td style="border: 1px solid #000; padding: 12px; text-align: center;">${r.pulse}</td>
         </tr>`).join('');
 
     const element = document.getElementById('pdf-template');
     
-    // 最佳比例設定：windowWidth 與 scale 是電腦版不跑版的關鍵
     const opt = { 
-        margin: [10, 5, 10, 5], 
-        filename: `血壓評估報告_${new Date().toLocaleDateString()}.pdf`, 
-        image: { type: 'jpeg', quality: 0.98 }, 
+        margin: [10, 5], 
+        filename: `血壓健康報告_${new Date().toLocaleDateString()}.pdf`, 
+        image: { type: 'jpeg', quality: 1 }, 
         html2canvas: { 
-            scale: 3, 
+            scale: 2, 
             useCORS: true, 
             scrollY: 0, 
-            windowWidth: 800 // 鎖定渲染寬度，解決電腦版斷一半問題
+            windowWidth: 1000 /* 鎖定寬度模擬，解決電腦下載斷一半問題 */
         }, 
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] }
     };
 
-    try { await html2pdf().set(opt).from(element).save(); } catch (e) { alert("產出失敗。"); } finally { btn.innerText = "📄 產出 PDF 報表"; }
+    try { await html2pdf().set(opt).from(element).save(); } catch (e) { alert("下載失敗。"); } finally { btn.innerText = "📄 產出 PDF 報表"; }
 }
 
 function filterRecordsByRange(records) {
