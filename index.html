@@ -36,11 +36,11 @@
         <section class="filter-section">
             <div class="filter-buttons no-pdf">
                 <button onclick="setRange('today')" id="btn-today">本日</button>
-                <button onclick="setRange('week')" id="btn-week" class="active">本週</button>
-                <button onclick="setRange('month')" id="btn-month">本月</button>
+                <button onclick="setRange('week')" id="btn-week" class="active">近一週</button>
+                <button onclick="setRange('month')" id="btn-month">近一個月</button>
                 <button onclick="toggleCustomRange()" id="btn-custom">自訂查詢</button>
             </div>
-            <div id="range-info-bar" style="display:none;"></div>
+            
             <div id="custom-date-panel" class="custom-date-panel no-pdf">
                 <div class="panel-header">選擇查詢範圍</div>
                 <div class="date-row">
@@ -73,27 +73,29 @@
         </section>
 
         <section class="history-section">
-            <h3>📋 最近紀錄 (每日早/晚去重)</h3>
+            <h3>📋 最近 5 筆紀錄 (每日去重)</h3>
             <div id="history-list"></div>
         </section>
     </main>
 
-    <div style="overflow: hidden; height: 0; width: 0; position: absolute;">
+    <div id="pdf-wrapper" style="visibility: hidden; position: fixed; top: 0; left: 0; width: 0; height: 0; overflow: hidden;">
         <div id="pdf-template" style="width: 190mm; padding: 10mm; font-family: sans-serif; color: #000; background: #fff;">
             <h1 style="font-size: 28px; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px;">血壓健康評估報表</h1>
             <p id="pdf-range" style="font-size: 16px; margin-bottom: 15px; font-weight: bold;"></p>
+            
             <div style="background: #f4f4f4; padding: 15px; border: 1px solid #ccc; margin-bottom: 20px; border-radius: 8px;">
-                <h2 style="margin: 0 0 10px 0; font-size: 20px; color: #333;">📋 數據摘要</h2>
+                <h2 style="margin: 0 0 10px 0; font-size: 20px;">📋 數據摘要</h2>
                 <p id="pdf-avg-main" style="font-size: 24px; font-weight: 900; margin: 5px 0; color: #d63031;"></p>
                 <div id="pdf-avg-sub" style="font-size: 16px; color: #555;"></div>
             </div>
+
             <h2 style="font-size: 18px; border-left: 5px solid #333; padding-left: 10px; margin-bottom: 10px;">🕒 詳細紀錄清單</h2>
             <table style="width: 100%; border-collapse: collapse; font-size: 16px;">
                 <thead>
                     <tr style="background-color: #eee;">
                         <th style="border: 1px solid #000; padding: 10px; text-align: left;">日期</th>
                         <th style="border: 1px solid #000; padding: 10px; text-align: center;">時段</th>
-                        <th style="border: 1px solid #000; padding: 10px; text-align: center;">SYS / DIA</th>
+                        <th style="border: 1px solid #000; padding: 10px; text-align: center;">收縮壓 / 舒張壓</th>
                         <th style="border: 1px solid #000; padding: 10px; text-align: center;">心率</th>
                     </tr>
                 </thead>

@@ -11,10 +11,6 @@ body { margin: 0; font-family: -apple-system, sans-serif; background: #FFF; disp
 .container { width: 92%; max-width: 450px; }
 .card-grid { display: flex; gap: 12px; margin-bottom: 20px; }
 .log-card { flex: 1; border-radius: 20px; padding: 25px 10px; text-align: center; border: 2px solid transparent; cursor: pointer; transition: 0.4s; background-color: rgba(245, 245, 245, 0.5); }
-.morning { border-color: rgba(212, 241, 232, 0.6); }
-.evening { border-color: rgba(255, 229, 231, 0.6); }
-.status-label { font-size: 0.85rem; font-weight: 800; margin-top: 8px; color: #FF5252; }
-
 .log-card.morning-done { background-color: var(--morning-mint); border-color: #BEE3D7; }
 .log-card.evening-done { background-color: var(--evening-peach); border-color: #FFD1D5; }
 .log-card.completed .status-label { color: #56C596; } 
@@ -53,4 +49,4 @@ body { margin: 0; font-family: -apple-system, sans-serif; background: #FFF; disp
 .modal-buttons { display: flex; flex-direction: column; gap: 12px; margin-top: 30px; }
 .btn-save { background: var(--blue-soft); color: white; border: none; padding: 22px; border-radius: 20px; font-size: 1.5rem; font-weight: 800; opacity: 0.4; transition: 0.3s; }
 .btn-save.can-save { opacity: 1; background: var(--blue-dark); }
-.btn-cancel { background: transparent; color: #bbb; border: none; padding: 10px; }
+.btn-cancel { background: transparent; color: #bbb; border: none; padding: 10px; font-size: 1.1rem; }
