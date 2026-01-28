@@ -26,8 +26,14 @@ function refreshDisplay() {
     const all = JSON.parse(localStorage.getItem('bp_records') || '[]');
     const { filtered, start, end } = filterRecordsByRange(all);
     const infoBar = document.getElementById('range-info-bar');
-    // 更新區間顯示文字
-    infoBar.innerText = (currentRange === 'today') ? `日期：${start}` : `區間：${start} ~ ${end}`;
+    
+    // 確保這裡正確寫入文字
+    if (currentRange === 'today') {
+        infoBar.innerText = `日期：${start}`;
+    } else {
+        infoBar.innerText = `區間：${start} ~ ${end}`;
+    }
+    
     renderHistory(filtered);
     updateChart(filtered);
     calculateSummary(filtered);
@@ -38,30 +44,55 @@ function calculateSummary(filtered) {
     const tipBox = document.getElementById('health-tip');
     const tipTitle = tipBox.querySelector('.tip-title');
     const tipContent = tipBox.querySelector('.tip-content');
-    if (filtered.length === 0) { avgText.innerText = "目前尚無資料"; tipBox.style.display = 'none'; return; }
+    
+    if (filtered.length === 0) {
+        avgText.innerText = "目前尚無資料";
+        tipBox.style.display = 'none';
+        return;
+    }
+
     const avgSys = Math.round(filtered.reduce((acc, r) => acc + parseInt(r.sys), 0) / filtered.length);
     const avgDia = Math.round(filtered.reduce((acc, r) => acc + parseInt(r.dia), 0) / filtered.length);
     avgText.innerText = `平均值：${avgSys}/${avgDia} mmHg`;
+    
     const advice = getAdvice(avgSys, avgDia);
-    tipTitle.innerText = advice.title; tipContent.innerText = advice.content;
-    tipBox.className = `health-tip ${advice.class}`; tipBox.style.display = 'block';
+    tipTitle.innerText = advice.title;
+    tipContent.innerText = advice.content;
+    tipBox.className = `health-tip ${advice.class}`;
+    tipBox.style.display = 'block';
 }
 
 function filterRecordsByRange(records) {
     const now = new Date(); let s = new Date(); let e = new Date();
     if (currentRange === 'today') { s.setHours(0,0,0,0); e.setHours(23,59,59,999); }
-    else if (currentRange === 'week') s.setDate(now.getDate() - 7);
-    else if (currentRange === 'month') s.setMonth(now.getMonth() - 1);
+    else if (currentRange === 'week') { s.setDate(now.getDate() - 7); s.setHours(0,0,0,0); }
+    else if (currentRange === 'month') { s.setMonth(now.getMonth() - 1); s.setHours(0,0,0,0); }
     else if (currentRange === 'custom') {
         const sv = document.getElementById('start-date').value;
         const ev = document.getElementById('end-date').value;
-        if (sv && ev) { s = new Date(sv); e = new Date(ev); }
+        if (sv && ev) { s = new Date(sv); e = new Date(ev); s.setHours(0,0,0,0); e.setHours(23,59,59,999); }
     }
-    s.setHours(0,0,0,0); e.setHours(23,59,59,999);
     const filtered = records.filter(r => r.timestamp >= s.getTime() && r.timestamp <= e.getTime());
     return { filtered, start: s.toLocaleDateString('zh-TW'), end: e.toLocaleDateString('zh-TW') };
 }
 
+function shareToLine() {
+    // 從畫面上抓取已經生成的文字
+    const infoBarText = document.getElementById('range-info-bar').innerText || "未指定日期";
+    const avg = document.getElementById('avg-text').innerText;
+    const tipTitleElement = document.querySelector('.tip-title');
+    const tipContentElement = document.querySelector('.tip-content');
+    
+    let advice = "尚無建議";
+    if (tipTitleElement && tipContentElement && document.getElementById('health-tip').style.display !== 'none') {
+        advice = tipTitleElement.innerText + ": " + tipContentElement.innerText;
+    }
+
+    const msg = `【心跳守護：血壓分析】\n📊 ${infoBarText}\n📈 ${avg}\n\n💡 建議：${advice}`;
+    window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank');
+}
+
+// 其餘邏輯維持...
 function checkTodayStatus() {
     const today = new Date().toLocaleDateString('zh-TW');
     const records = JSON.parse(localStorage.getItem('bp_records') || '[]');
@@ -75,22 +106,6 @@ function checkTodayStatus() {
     else { mCard.classList.remove('completed', 'morning-done'); mStatus.innerText = '今日尚未填寫'; }
     if (eDone) { eCard.classList.add('completed', 'evening-done'); eStatus.innerText = '今日已完成'; } 
     else { eCard.classList.remove('completed', 'evening-done'); eStatus.innerText = '今日尚未填寫'; }
-}
-
-// --- 優化後的分享功能 ---
-function shareToLine() {
-    const dateRange = document.getElementById('range-info-bar').innerText;
-    const avg = document.getElementById('avg-text').innerText;
-    const tipTitleElement = document.querySelector('.tip-title');
-    const tipContentElement = document.querySelector('.tip-content');
-    
-    let advice = "尚無建議";
-    if (tipTitleElement && tipContentElement && document.getElementById('health-tip').style.display !== 'none') {
-        advice = tipTitleElement.innerText + ": " + tipContentElement.innerText;
-    }
-
-    const msg = `【心跳守護：血壓分析】\n📊 ${dateRange}\n📈 ${avg}\n\n💡 建議：${advice}`;
-    window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank');
 }
 
 function updateChart(filtered) {
