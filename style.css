@@ -17,24 +17,24 @@ body { margin: 0; font-family: -apple-system, sans-serif; background: #FFF; disp
 .icon { font-size: 2.2rem; display: block; opacity: 0.4; }
 .log-card.completed .icon { opacity: 1; }
 
-/* 優化篩選按鈕：字體放大加粗、單行、手機寬度適配 */
+/* 篩選按鈕：確保電腦版字體依然大且加粗 */
 .filter-buttons { 
-    display: flex; 
-    gap: 3px; /* 縮小間隙 */
+    display: grid; 
+    grid-template-columns: repeat(4, 1fr); 
+    gap: 4px; 
     margin-bottom: 10px; 
     width: 100%; 
 }
 .filter-buttons button { 
-    flex: 1 1 0; 
-    padding: 12px 0; /* 移除左右邊距 */
+    padding: 12px 0; 
     border-radius: 12px; 
     border: 1px solid #eee; 
     background: #f8f9fa; 
-    font-weight: 900; /* 強制超粗體 */
-    font-size: 1.05rem; /* 顯著放大字體 */
+    font-weight: 900; 
+    font-size: 1.1rem;
     cursor: pointer; 
     white-space: nowrap; 
-    letter-spacing: -1px; /* 縮緊字距確保手機單行顯示 */
+    letter-spacing: -1px; 
 }
 .filter-buttons button.active { background: var(--blue-soft); color: white; border-color: var(--blue-soft); }
 

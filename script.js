@@ -27,6 +27,7 @@ function updateTargetDateDisplay() {
     document.getElementById('target-date-display').innerText = dateStr;
 }
 
+// 嚴格去重儲存
 function saveData() {
     const sys = parseInt(document.getElementById('sys').value, 10);
     const dia = parseInt(document.getElementById('dia').value, 10);
@@ -97,7 +98,6 @@ function refreshDisplay() {
     const rangeText = (currentRange === 'today') ? `${start}` : `${start} ~ ${end}`;
     document.getElementById('card-date-display').innerText = rangeText;
     
-    // 修復需求：移除紀錄清單中的括號 (早/晚)
     document.getElementById('history-list').innerHTML = filtered.slice(0, 5).map(r => `
         <div class="history-item">
             <div style="font-size:0.85rem;color:#999">${r.date}</div>
@@ -111,30 +111,42 @@ function refreshDisplay() {
     calculateSummary(filtered);
 }
 
+// 核心優化：響應式渲染，確保電腦與手機下載 PDF 比例皆為最佳
 async function exportPDF() {
     const btn = document.querySelector('.btn-pdf-large');
-    if (typeof html2pdf === 'undefined') return;
+    if (typeof html2pdf === 'undefined') { alert("載入中..."); return; }
+    if (currentFilteredData.length === 0) { alert("無資料。"); return; }
+    
     btn.innerText = "⏳ 格式化報表中...";
     document.getElementById('pdf-range').innerText = `報告區間：${document.getElementById('card-date-display').innerText}`;
     const tableBody = document.getElementById('pdf-table-body');
+    
     tableBody.innerHTML = currentFilteredData.sort((a, b) => b.timestamp - a.timestamp).map(r => `
-        <tr style="page-break-inside: avoid;">
-            <td style="border:1px solid #000; padding:10px;">${r.date}</td>
-            <td style="border:1px solid #000; padding:10px; text-align: center;">${r.type === 'morning' ? '早晨' : '晚間'}</td>
-            <td style="border:1px solid #000; padding:10px; text-align: center; font-weight: bold; font-size:20px;">${r.sys} / ${r.dia}</td>
-            <td style="border:1px solid #000; padding:10px; text-align: center;">${r.pulse}</td>
+        <tr style="page-break-inside: avoid; border-bottom: 1px solid #000;">
+            <td style="border: 1px solid #000; padding: 10px;">${r.date}</td>
+            <td style="border: 1px solid #000; padding: 10px; text-align: center;">${r.type === 'morning' ? '早晨' : '晚間'}</td>
+            <td style="border: 1px solid #000; padding: 10px; text-align: center; font-weight: bold; font-size:20px;">${r.sys} / ${r.dia}</td>
+            <td style="border: 1px solid #000; padding: 10px; text-align: center;">${r.pulse}</td>
         </tr>`).join('');
 
     const element = document.getElementById('pdf-template');
+    
+    // 最佳比例設定：windowWidth 與 scale 是電腦版不跑版的關鍵
     const opt = { 
         margin: [10, 5, 10, 5], 
         filename: `血壓評估報告_${new Date().toLocaleDateString()}.pdf`, 
-        image: { type: 'jpeg', quality: 1 }, 
-        html2canvas: { scale: 2, useCORS: true, scrollY: 0, windowWidth: 800 }, 
+        image: { type: 'jpeg', quality: 0.98 }, 
+        html2canvas: { 
+            scale: 3, 
+            useCORS: true, 
+            scrollY: 0, 
+            windowWidth: 800 // 鎖定渲染寬度，解決電腦版斷一半問題
+        }, 
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] }
     };
-    try { await html2pdf().set(opt).from(element).save(); } finally { btn.innerText = "📄 產出 PDF 報表"; }
+
+    try { await html2pdf().set(opt).from(element).save(); } catch (e) { alert("產出失敗。"); } finally { btn.innerText = "📄 產出 PDF 報表"; }
 }
 
 function filterRecordsByRange(records) {
@@ -157,7 +169,6 @@ function setupInputListeners() { const inputs = document.querySelectorAll('#log-
 function setRange(range) { currentRange = range; document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active')); document.getElementById(`btn-${range}`).classList.add('active'); document.getElementById('custom-date-panel').style.display = 'none'; refreshDisplay(); }
 function toggleCustomRange() { const p = document.getElementById('custom-date-panel'); p.style.display = (p.style.display === 'block') ? 'none' : 'block'; }
 function applyCustomRange() { currentRange = 'custom'; refreshDisplay(); }
-
 function checkTodayStatus() {
     const targetKey = currentTargetDate.toLocaleDateString('zh-TW');
     const records = JSON.parse(localStorage.getItem('bp_records') || '[]');
@@ -167,14 +178,12 @@ function checkTodayStatus() {
     if (mRec) { mCard.classList.add('completed', 'morning-done'); document.getElementById('morning-status').innerText = `已填: ${mRec.sys}/${mRec.dia}`; } else { mCard.classList.remove('completed', 'morning-done'); document.getElementById('morning-status').innerText = '尚未填寫'; }
     if (eRec) { eCard.classList.add('completed', 'evening-done'); document.getElementById('evening-status').innerText = `已填: ${eRec.sys}/${eRec.dia}`; } else { eCard.classList.remove('completed', 'evening-done'); document.getElementById('evening-status').innerText = '尚未填寫'; }
 }
-
 function shareToLine() { 
     const tipTitle = document.querySelector('.tip-title').innerText;
     const tipContent = document.querySelector('.tip-content').innerText;
     const msg = `【心跳守護】血壓回報\n📊 查詢日期：${document.getElementById('card-date-display').innerText}\n📈 ${document.getElementById('avg-text').innerText}\n💡 建議：${tipTitle} - ${tipContent}\n\n隨時追蹤，守護健康！`; 
     window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank'); 
 }
-
 function updateChart(filtered) { 
     const ctx = document.getElementById('bpChart').getContext('2d'); if (bpChart) bpChart.destroy(); if (filtered.length === 0) return; 
     const sorted = [...filtered].sort((a, b) => a.timestamp - b.timestamp); 
@@ -190,7 +199,6 @@ function updateChart(filtered) {
         options: { responsive: true, maintainAspectRatio: false } 
     }); 
 }
-
 function getAdvice(sys, dia) { 
     if (sys < 90 || dia < 60) return { title: "📉 數值偏低", content: "請注意是否頭暈，建議補充水分或諮詢醫師。", class: "tip-danger" };
     if (sys < 120 && dia < 80) return { title: "✅ 健康達標", content: "數值很漂亮！請繼續維持規律作息與運動。", class: "tip-normal" };
