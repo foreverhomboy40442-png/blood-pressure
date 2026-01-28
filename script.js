@@ -26,6 +26,7 @@ function refreshDisplay() {
     const all = JSON.parse(localStorage.getItem('bp_records') || '[]');
     const { filtered, start, end } = filterRecordsByRange(all);
     const infoBar = document.getElementById('range-info-bar');
+    // 更新區間顯示文字
     infoBar.innerText = (currentRange === 'today') ? `日期：${start}` : `區間：${start} ~ ${end}`;
     renderHistory(filtered);
     updateChart(filtered);
@@ -76,10 +77,19 @@ function checkTodayStatus() {
     else { eCard.classList.remove('completed', 'evening-done'); eStatus.innerText = '今日尚未填寫'; }
 }
 
+// --- 優化後的分享功能 ---
 function shareToLine() {
+    const dateRange = document.getElementById('range-info-bar').innerText;
     const avg = document.getElementById('avg-text').innerText;
-    const advice = document.querySelector('.tip-title').innerText + ": " + document.querySelector('.tip-content').innerText;
-    const msg = `【心跳守護：血壓分析】\n${avg}\n\n💡 建議：${advice}`;
+    const tipTitleElement = document.querySelector('.tip-title');
+    const tipContentElement = document.querySelector('.tip-content');
+    
+    let advice = "尚無建議";
+    if (tipTitleElement && tipContentElement && document.getElementById('health-tip').style.display !== 'none') {
+        advice = tipTitleElement.innerText + ": " + tipContentElement.innerText;
+    }
+
+    const msg = `【心跳守護：血壓分析】\n📊 ${dateRange}\n📈 ${avg}\n\n💡 建議：${advice}`;
     window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank');
 }
 
@@ -130,6 +140,7 @@ function openModal(type) {
 function closeModal() {
     document.getElementById('log-modal').style.display = 'none';
     document.querySelectorAll('#log-modal input').forEach(i => i.value = '');
+    document.getElementById('btn-save').classList.remove('can-save');
 }
 
 function saveData() {
