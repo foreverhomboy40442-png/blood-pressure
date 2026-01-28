@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>心跳守護：血壓日誌</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header>
+        <div id="current-date-display" class="today-tag">2026年1月28日</div>
+        <h1>心跳守護</h1>
+        <p>您的專屬健康日誌</p>
+    </header>
+
+    <main class="container" id="report-area">
+        <div class="card-grid no-print">
+            <div id="morning-card" class="log-card morning" onclick="openModal('morning')">
+                <span class="icon">☀️</span>
+                <h2>早晨紀錄</h2>
+                <p class="status-label">今日已完成</p>
+            </div>
+            <div id="evening-card" class="log-card evening" onclick="openModal('evening')">
+                <span class="icon">🌙</span>
+                <h2>晚間紀錄</h2>
+                <p class="status-label">今日已完成</p>
+            </div>
+        </div>
+
+        <section class="filter-section no-print">
+            <div class="filter-buttons">
+                <button onclick="setRange('week')" id="btn-week" class="active">本週</button>
+                <button onclick="setRange('month')" id="btn-month">本月</button>
+                <button onclick="toggleCustomRange()" id="btn-custom">自訂</button>
+            </div>
+            <div id="custom-date-picker" class="custom-date-picker">
+                <div class="date-inputs">
+                    <input type="date" id="start-date"> <span>至</span> <input type="date" id="end-date">
+                </div>
+                <button class="btn-apply" onclick="applyCustomRange()">確認查詢</button>
+            </div>
+        </section>
+
+        <section class="analysis-section">
+            <div class="summary-card">
+                <h3 id="range-title">📊 本週數據摘要</h3>
+                <p id="range-date-display" class="range-date-text">2026/01/21 - 2026/01/28</p>
+                <p id="avg-text">尚無數據</p>
+                <div id="health-tip" class="health-tip"></div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="bpChart"></canvas>
+            </div>
+            
+            <div class="action-buttons no-print">
+                <button class="btn-pdf" onclick="exportPDF()">📄 產出 PDF 報表</button>
+                <button class="btn-share" onclick="shareToLine()">📤 LINE 分享文字</button>
+            </div>
+        </section>
+
+        <section class="history-section">
+            <h3>📋 歷史紀錄明細</h3>
+            <div id="history-list"></div>
+        </section>
+    </main>
+
+    <div id="log-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title">紀錄數據</h3>
+            <div class="input-group">
+                <label>收縮壓 (高壓)</label>
+                <input type="number" id="sys" placeholder="120" inputmode="numeric">
+            </div>
+            <div class="input-group">
+                <label>舒張壓 (低壓)</label>
+                <input type="number" id="dia" placeholder="80" inputmode="numeric">
+            </div>
+            <div class="input-group">
+                <label>心率 (BPM)</label>
+                <input type="number" id="pulse" placeholder="70" inputmode="numeric">
+            </div>
+            <div class="button-group">
+                <button class="btn-save" id="btn-save" onclick="saveData()">儲存紀錄</button>
+                <button class="btn-cancel" onclick="closeModal()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
