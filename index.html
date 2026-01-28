@@ -3,55 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="apple-mobile-web-app-capable" content="yes">
     <title>心跳守護：血壓日誌</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
     <header>
-        <div id="current-date-display" class="today-tag"></div>
         <h1>心跳守護</h1>
-        <p>您的專屬健康日誌</p>
+        <div class="date-stepper no-pdf">
+            <button onclick="changeDate(-1)">❮</button>
+            <div id="target-date-display" class="today-tag">載入中...</div>
+            <button onclick="changeDate(1)">❯</button>
+        </div>
     </header>
 
-    <main class="container">
-        <div class="card-grid">
+    <main class="container" id="main-report">
+        <div class="card-grid no-pdf">
             <div id="morning-card" class="log-card morning" onclick="openModal('morning')">
                 <span class="icon">☀️</span>
                 <h2>早晨紀錄</h2>
-                <p id="morning-status" class="status-label">今日尚未填寫</p>
+                <p id="morning-status" class="status-label">尚未填寫</p>
             </div>
             <div id="evening-card" class="log-card evening" onclick="openModal('evening')">
                 <span class="icon">🌙</span>
                 <h2>晚間紀錄</h2>
-                <p id="evening-status" class="status-label">今日尚未填寫</p>
+                <p id="evening-status" class="status-label">尚未填寫</p>
             </div>
         </div>
 
         <section class="filter-section">
-            <div class="filter-buttons">
+            <div class="filter-buttons no-pdf">
                 <button onclick="setRange('today')" id="btn-today">本日</button>
                 <button onclick="setRange('week')" id="btn-week" class="active">本週</button>
                 <button onclick="setRange('month')" id="btn-month">本月</button>
                 <button onclick="toggleCustomRange()" id="btn-custom">自訂查詢</button>
             </div>
-            
-            <div id="range-info-bar" class="range-info-bar"></div>
-
-            <div id="custom-date-panel" class="custom-date-panel">
+            <div id="range-info-bar" style="display:none;"></div>
+            <div id="custom-date-panel" class="custom-date-panel no-pdf">
                 <div class="panel-header">選擇查詢範圍</div>
                 <div class="date-row">
-                    <div class="date-input-group">
-                        <label>開始日期</label>
-                        <input type="date" id="start-date">
-                    </div>
+                    <div class="date-input-group"><label>開始日期</label><input type="date" id="start-date"></div>
                     <div class="date-sep">至</div>
-                    <div class="date-input-group">
-                        <label>結束日期</label>
-                        <input type="date" id="end-date">
-                    </div>
+                    <div class="date-input-group"><label>結束日期</label><input type="date" id="end-date"></div>
                 </div>
                 <button class="btn-apply-fancy" onclick="applyCustomRange()">確認查詢</button>
             </div>
@@ -59,33 +54,60 @@
 
         <section class="analysis-section">
             <div class="summary-card">
-                <h3>📊 數據摘要</h3>
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:10px; margin-bottom:15px;">
+                    <h3 style="margin:0;">📊 數據摘要</h3>
+                    <span id="card-date-display" style="font-size:0.85rem; color:#888; font-weight:600;"></span>
+                </div>
                 <p id="avg-text" class="avg-main-text">尚無數據</p>
+                <div id="sub-avg-text" style="font-size: 0.95rem; color: #555; margin-top: 5px;"></div>
                 <div id="health-tip" class="health-tip">
                     <div class="tip-title"></div>
                     <div class="tip-content"></div>
                 </div>
             </div>
-
-            <div class="chart-container">
-                <canvas id="bpChart"></canvas>
+            <div class="chart-container"><canvas id="bpChart"></canvas></div>
+            <div class="action-buttons no-pdf">
+                <button class="btn-pdf-large" onclick="exportPDF()">📄 產出 PDF 報表</button>
+                <button class="btn-share-large" onclick="shareToLine()">📤 分享至 LINE</button>
             </div>
-            
-            <button class="btn-share-large" onclick="shareToLine()">📤 分享報表至 LINE</button>
         </section>
 
         <section class="history-section">
-            <h3>📋 歷史紀錄明細</h3>
+            <h3>📋 最近紀錄 (每日早/晚去重)</h3>
             <div id="history-list"></div>
         </section>
     </main>
 
+    <div style="overflow: hidden; height: 0; width: 0; position: absolute;">
+        <div id="pdf-template" style="width: 190mm; padding: 10mm; font-family: sans-serif; color: #000; background: #fff;">
+            <h1 style="font-size: 28px; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 10px;">血壓健康評估報表</h1>
+            <p id="pdf-range" style="font-size: 16px; margin-bottom: 15px; font-weight: bold;"></p>
+            <div style="background: #f4f4f4; padding: 15px; border: 1px solid #ccc; margin-bottom: 20px; border-radius: 8px;">
+                <h2 style="margin: 0 0 10px 0; font-size: 20px; color: #333;">📋 數據摘要</h2>
+                <p id="pdf-avg-main" style="font-size: 24px; font-weight: 900; margin: 5px 0; color: #d63031;"></p>
+                <div id="pdf-avg-sub" style="font-size: 16px; color: #555;"></div>
+            </div>
+            <h2 style="font-size: 18px; border-left: 5px solid #333; padding-left: 10px; margin-bottom: 10px;">🕒 詳細紀錄清單</h2>
+            <table style="width: 100%; border-collapse: collapse; font-size: 16px;">
+                <thead>
+                    <tr style="background-color: #eee;">
+                        <th style="border: 1px solid #000; padding: 10px; text-align: left;">日期</th>
+                        <th style="border: 1px solid #000; padding: 10px; text-align: center;">時段</th>
+                        <th style="border: 1px solid #000; padding: 10px; text-align: center;">SYS / DIA</th>
+                        <th style="border: 1px solid #000; padding: 10px; text-align: center;">心率</th>
+                    </tr>
+                </thead>
+                <tbody id="pdf-table-body"></tbody>
+            </table>
+        </div>
+    </div>
+
     <div id="log-modal" class="modal">
         <div class="modal-content">
             <h3 id="modal-title">紀錄數據</h3>
-            <div class="input-row"><label>收縮壓 (SYS)</label><input type="number" id="sys" placeholder="" inputmode="numeric"></div>
-            <div class="input-row"><label>舒張壓 (DIA)</label><input type="number" id="dia" placeholder="" inputmode="numeric"></div>
-            <div class="input-row"><label>心率 (PUL)</label><input type="number" id="pulse" placeholder="" inputmode="numeric"></div>
+            <div class="input-row"><label>收縮壓 (SYS)</label><input type="number" id="sys" inputmode="numeric"></div>
+            <div class="input-row"><label>舒張壓 (DIA)</label><input type="number" id="dia" inputmode="numeric"></div>
+            <div class="input-row"><label>心率 (PUL)</label><input type="number" id="pulse" inputmode="numeric"></div>
             <div class="modal-buttons">
                 <button class="btn-save" id="btn-save" onclick="saveData()">確認儲存</button>
                 <button class="btn-cancel" onclick="closeModal()">取消</button>
