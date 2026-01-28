@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>心跳守護：雲端血壓日誌</title>
+    <title>心跳守護：血壓日誌</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <link rel="stylesheet" href="style.css">
@@ -24,25 +24,51 @@
     <main class="container" id="main-report">
         <div class="card-grid no-pdf">
             <div id="morning-card" class="log-card morning" onclick="openModal('morning')">
-                <span class="icon">☀️</span>
-                <h2>早晨紀錄</h2>
+                <div class="card-inline-content">
+                    <span class="icon-large">☀️</span>
+                    <h2 class="text-large">早晨紀錄</h2>
+                </div>
                 <p id="morning-status" class="status-label">尚未填寫</p>
             </div>
             <div id="evening-card" class="log-card evening" onclick="openModal('evening')">
-                <span class="icon">🌙</span>
-                <h2>晚間紀錄</h2>
+                <div class="card-inline-content">
+                    <span class="icon-large">🌙</span>
+                    <h2 class="text-large">晚間紀錄</h2>
+                </div>
                 <p id="evening-status" class="status-label">尚未填寫</p>
             </div>
         </div>
+
+        <section class="filter-section no-pdf">
+            <div class="filter-buttons">
+                <button onclick="handleRangeClick('today')" id="btn-today">本日</button>
+                <button onclick="handleRangeClick('week')" id="btn-week" class="active">近一週</button>
+                <button onclick="handleRangeClick('month')" id="btn-month">近一個月</button>
+                <button onclick="handleRangeClick('custom')" id="btn-custom">自訂查詢</button>
+            </div>
+            
+            <div id="custom-date-panel" class="custom-panel-fancy">
+                <div class="panel-title">🗓️ 請選擇查詢區間</div>
+                <div class="date-input-row-single">
+                    <input type="date" id="start-date" class="compact-date-input">
+                    <div class="date-arrow-single">➜</div>
+                    <input type="date" id="end-date" class="compact-date-input">
+                </div>
+                <button class="btn-apply-fancy" onclick="applyCustomRange()">確認查詢</button>
+            </div>
+        </section>
 
         <section class="analysis-section">
             <div class="summary-card">
                 <div class="summary-header">
                     <h3>📊 數據摘要</h3>
-                    <span id="card-date-display"></span>
+                    <span id="card-date-display" class="header-date"></span>
                 </div>
                 <p id="avg-text" class="avg-main-text">同步中...</p>
-                <div id="sub-avg-text" style="font-size: 0.9rem; color: #777; margin-top: 5px;"></div>
+                <div id="health-tip" class="health-tip">
+                    <div class="tip-title">💡 溫馨建議</div>
+                    <div id="tip-content" class="tip-content">正在為您分析數據...</div>
+                </div>
             </div>
             <div class="chart-container"><canvas id="bpChart"></canvas></div>
             <div class="action-buttons no-pdf">
@@ -52,58 +78,55 @@
         </section>
 
         <section class="history-section">
-            <h3>📋 最近 5 筆紀錄</h3>
+            <h3>📋 最近紀錄</h3>
             <div id="history-list"></div>
         </section>
     </main>
 
-    <div id="login-modal" class="custom-login-modal">
-        <div class="glass-content">
-            <div class="modal-icon-wrapper">
-                <div class="pulse-ring"></div>
-                <span class="modal-icon">🩺</span>
-            </div>
-            <h2>歡迎使用</h2>
-            <p>輸入專屬代號<br>同步您的完整雲端健康日誌</p>
-            <div class="input-group">
-                <input type="text" id="login-input" placeholder="您的代號 (中/英/數)" autocomplete="off">
-            </div>
-            <button id="confirm-login-btn" class="primary-btn">開啟雲端同步</button>
+    <div id="login-modal" class="modal-overlay">
+        <div class="modal-card">
+            <div class="modal-icon">🧡</div>
+            <h2 class="large-title">歡迎回來，守護您的健康</h2>
+            <p class="warm-text">請告訴我您的專屬代號<br>我們將為您找回所有珍貴的紀錄</p>
+            <input type="text" id="login-input" class="giant-input" placeholder="代號..." autocomplete="off">
+            <button id="confirm-login-btn" class="btn-warm-save">開啟健康連線</button>
         </div>
     </div>
 
-    <div id="log-modal" class="modal">
-        <div class="modal-content cute-modal">
-            <h3 id="modal-title">紀錄數據</h3>
-            <div class="input-field">
-                <label>收縮壓 (SYS)</label>
-                <input type="number" id="sys" inputmode="numeric" placeholder="120">
+    <div id="log-modal" class="modal-overlay">
+        <div class="modal-card">
+            <h2>紀錄數據</h2>
+            <div class="input-container">
+                <div class="input-block">
+                    <label>收縮壓 (SYS)</label>
+                    <input type="number" id="sys" inputmode="numeric" placeholder="120">
+                </div>
+                <div class="input-block">
+                    <label>舒張壓 (DIA)</label>
+                    <input type="number" id="dia" inputmode="numeric" placeholder="80">
+                </div>
+                <div class="input-block">
+                    <label>心率 (PUL)</label>
+                    <input type="number" id="pulse" inputmode="numeric" placeholder="72">
+                </div>
             </div>
-            <div class="input-field">
-                <label>舒張壓 (DIA)</label>
-                <input type="number" id="dia" inputmode="numeric" placeholder="80">
-            </div>
-            <div class="input-field">
-                <label>心率 (PUL)</label>
-                <input type="number" id="pulse" inputmode="numeric" placeholder="72">
-            </div>
-            <div class="modal-buttons">
-                <button class="btn-save-cute" onclick="saveData()">確認儲存</button>
-                <button class="btn-cancel-cute" onclick="closeModal()">取消</button>
+            <div class="modal-footer">
+                <button class="btn-warm-save" onclick="saveData()">確認儲存</button>
+                <button class="btn-text" onclick="closeModal()">取消</button>
             </div>
         </div>
     </div>
 
-    <div id="pdf-wrapper" style="position: absolute; left: -9999px; top: 0; width: 800px;">
-        <div id="pdf-template" style="padding: 40px; background: #fff;">
-            <h1 style="font-size: 32px; border-bottom: 3px solid #333; padding-bottom: 10px;">血壓健康評估報表</h1>
-            <p id="pdf-user-name" style="font-size: 18px; margin: 10px 0;"></p>
-            <div id="pdf-avg-main" style="font-size: 24px; font-weight: 900; color: #d63031; margin: 20px 0;"></div>
-            <table style="width: 100%; border-collapse: collapse; margin-top:20px;">
-                <thead><tr style="background:#f1f1f1;">
+    <div id="pdf-wrapper" style="position: absolute; left: -9999px; top: 0; width: 800px; background: white;">
+        <div id="pdf-template" style="padding: 40px;">
+            <h1 style="font-size: 32px; border-bottom: 2px solid #333; padding-bottom: 10px;">血壓健康評估報表</h1>
+            <p id="pdf-user-info" style="font-size: 18px; margin: 15px 0;"></p>
+            <div id="pdf-avg-summary" style="font-size: 22px; font-weight: bold; color: #d63031; padding: 20px; background: #f9f9f9; border-radius: 10px; margin: 20px 0;"></div>
+            <table style="width: 100%; border-collapse: collapse;">
+                <thead><tr style="background:#eee;">
                     <th style="border:1px solid #ddd; padding:12px;">日期</th>
                     <th style="border:1px solid #ddd; padding:12px;">時段</th>
-                    <th style="border:1px solid #ddd; padding:12px;">血壓</th>
+                    <th style="border:1px solid #ddd; padding:12px;">血壓 (SYS/DIA)</th>
                     <th style="border:1px solid #ddd; padding:12px;">心率</th>
                 </tr></thead>
                 <tbody id="pdf-table-body"></tbody>
