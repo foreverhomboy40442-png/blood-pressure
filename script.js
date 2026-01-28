@@ -96,9 +96,20 @@ function refreshDisplay() {
     calculateSummary(filtered);
 }
 
+// 核心優化：偵測 LINE 環境並引導跳轉至外部瀏覽器
 async function exportPDF() {
     const btn = document.querySelector('.btn-pdf-large');
+    
+    // 偵測 LINE 內建瀏覽器
+    const isLine = /Line/i.test(navigator.userAgent);
+    if (isLine) {
+        alert("⚠️ LINE 內建瀏覽器無法下載檔案。\n請點選右上角『三個點』或『分享圖示』，選擇『使用預設瀏覽器開啟』(Safari/Chrome) 即可正常下載！");
+        return;
+    }
+
     if (typeof html2pdf === 'undefined') return;
+    if (currentFilteredData.length === 0) { alert("尚未有紀錄。"); return; }
+    
     btn.innerText = "⏳ 格式化報表中...";
     document.getElementById('pdf-range').innerText = `報告區間：${document.getElementById('card-date-display').innerText}`;
     const tableBody = document.getElementById('pdf-table-body');
@@ -114,7 +125,7 @@ async function exportPDF() {
         margin: [10, 5], 
         filename: `血壓健康報告_${new Date().toLocaleDateString()}.pdf`, 
         image: { type: 'jpeg', quality: 1 }, 
-        html2canvas: { scale: 2, useCORS: true, scrollY: 0, windowWidth: 800 }, 
+        html2canvas: { scale: 2, useCORS: true, scrollY: 0, windowWidth: 1000 }, 
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] }
     };
@@ -138,8 +149,6 @@ function filterRecordsByRange(records) {
 function openModal(type) { currentType = type; document.getElementById('modal-title').innerText = (type === 'morning' ? '☀️ 早晨紀錄' : '🌙 晚間紀錄'); document.getElementById('log-modal').style.display = 'flex'; }
 function closeModal() { document.getElementById('log-modal').style.display = 'none'; document.querySelectorAll('#log-modal input').forEach(i => i.value = ''); document.getElementById('btn-save').classList.remove('can-save'); }
 function setupInputListeners() { const inputs = document.querySelectorAll('#log-modal input'); const btn = document.getElementById('btn-save'); inputs.forEach(i => i.addEventListener('input', () => { btn.classList.toggle('can-save', Array.from(inputs).every(inp => inp.value.trim() !== '')); })); }
-
-// 核心修正：點選「本日/週/月」時，清除「自訂查詢」按鈕的選取狀態
 function setRange(range) { 
     currentRange = range; 
     document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active')); 
@@ -147,8 +156,6 @@ function setRange(range) {
     document.getElementById('custom-date-panel').style.display = 'none'; 
     refreshDisplay(); 
 }
-
-// 核心修正：切換自訂查詢面板時，清除其他按鈕樣式，並正確鎖定選取狀態
 function toggleCustomRange() { 
     const p = document.getElementById('custom-date-panel'); 
     const btnCustom = document.getElementById('btn-custom');
@@ -156,13 +163,11 @@ function toggleCustomRange() {
         p.style.display = 'none';
         btnCustom.classList.remove('active');
     } else {
-        // 開啟自訂面板：移除所有本日/週/月按鈕的 active
         document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active')); 
         p.style.display = 'block';
         btnCustom.classList.add('active');
     }
 }
-
 function applyCustomRange() { currentRange = 'custom'; refreshDisplay(); }
 function checkTodayStatus() {
     const targetKey = currentTargetDate.toLocaleDateString('zh-TW');
