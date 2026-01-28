@@ -1,71 +1,75 @@
 :root {
     --bg-color: #FFFFFF;
+    --morning-mint: #D4F1E8;  /* 柔和薄荷綠 */
+    --evening-peach: #FFE5E7; /* 輕盈蜜桃粉 */
+    --green-done: #56C596;
     --blue-soft: #A2D2FF;
     --blue-dark: #5DA7FF;
-    --pink-soft: #FFC2C7;
-    --success-green: #B2F2BB;
     --text-dark: #4A4A4A;
     --shadow: 0 8px 24px rgba(0,0,0,0.06);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-body {
-    margin: 0; font-family: -apple-system, system-ui, sans-serif;
-    background-color: var(--bg-color); color: var(--text-dark);
-    display: flex; flex-direction: column; align-items: center; padding-bottom: 50px;
-}
+body { margin: 0; font-family: -apple-system, system-ui, sans-serif; background-color: var(--bg-color); color: var(--text-dark); display: flex; flex-direction: column; align-items: center; padding-bottom: 50px; }
 
 header { text-align: center; padding: 30px 0 10px; }
 .today-tag { background: #f0f0f0; padding: 6px 16px; border-radius: 50px; font-size: 0.85rem; color: #888; display: inline-block; margin-bottom: 10px; }
-
 .container { width: 92%; max-width: 450px; }
 
-/* 紀錄卡片 */
-.card-grid { display: flex; gap: 15px; margin-bottom: 20px; }
+/* --- 紀錄卡片優化：調淡顏色與透明度 --- */
+.card-grid { display: flex; gap: 12px; margin-bottom: 20px; }
 .log-card {
-    flex: 1; background: #fff; border-radius: 24px; padding: 25px 10px; text-align: center;
-    box-shadow: var(--shadow); border: 3px solid transparent; transition: all 0.2s; cursor: pointer;
+    flex: 1; 
+    background-color: rgba(245, 245, 245, 0.5); /* 尚未填寫：極淺灰透明 */
+    border-radius: 20px; 
+    padding: 25px 10px; 
+    text-align: center; 
+    border: 2px solid #EEE; 
+    cursor: pointer; 
+    transition: 0.4s;
 }
-.morning { border-color: var(--blue-soft); background: #F0F7FF; }
-.evening { border-color: var(--pink-soft); background: #FFF5F6; }
-.log-card:active { transform: scale(0.95); }
-.status-label { display: none; font-size: 0.85rem; font-weight: bold; color: #2b8a3e; margin-top: 10px; }
-.completed { background-color: var(--success-green) !important; border-color: #8ce99a; }
-.completed .status-label { display: block; }
-.icon { font-size: 2.5rem; display: block; }
+.status-label { font-size: 0.85rem; font-weight: 800; margin-top: 8px; color: #FF5252; } /* 尚未填寫紅字 */
 
-/* 篩選與數據 */
-.filter-buttons { display: flex; gap: 8px; margin-bottom: 15px; }
-.filter-buttons button { flex: 1; padding: 12px; border-radius: 12px; border: 1px solid #eee; background: #f8f9fa; font-weight: 600; cursor: pointer; }
+/* 完成後：淡雅實色 */
+.log-card.morning-done { background-color: var(--morning-mint); border-color: #BEE3D7; }
+.log-card.evening-done { background-color: var(--evening-peach); border-color: #FFD1D5; }
+
+.log-card.completed .status-label { color: #56C596; } /* 完成後綠字 */
+.icon { font-size: 2.2rem; display: block; opacity: 0.3; transition: 0.3s; }
+.log-card.completed .icon { opacity: 1; }
+
+/* --- 日期顯示 --- */
+.range-info-bar { width: 100%; text-align: center; font-size: 0.85rem; color: #888; margin-bottom: 12px; font-weight: 600; }
+
+/* --- 健康建議：紅字粗框標題 + 黑字內文 --- */
+.health-tip { margin-top: 20px; border-radius: 16px; padding: 18px; display: none; text-align: left; border: 3px solid transparent; }
+.tip-warning, .tip-danger { border-color: #FF5252; }
+.tip-normal { border-color: var(--blue-soft); background: #F0F7FF; }
+.tip-title { color: #FF5252; font-weight: 900; font-size: 1.2rem; margin-bottom: 8px; }
+.tip-normal .tip-title { color: var(--blue-dark); }
+.tip-content { color: #333; font-weight: normal; font-size: 1rem; line-height: 1.4; }
+
+/* 其餘樣式維持 */
+.filter-buttons { display: flex; gap: 5px; margin-bottom: 10px; }
+.filter-buttons button { flex: 1; padding: 12px 5px; border-radius: 12px; border: 1px solid #eee; background: #f8f9fa; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
 .filter-buttons button.active { background: var(--blue-soft); color: white; border-color: var(--blue-soft); }
-
-.custom-date-picker { display: none; background: #fff; padding: 15px; border-radius: 15px; box-shadow: var(--shadow); flex-direction: column; gap: 10px; margin-bottom: 15px; }
-.date-inputs { display: flex; align-items: center; justify-content: space-between; }
-.date-inputs input { width: 45%; padding: 10px; border-radius: 10px; border: 1px solid #ddd; }
-
-.summary-card { background: #fff; padding: 25px; border-radius: 24px; box-shadow: var(--shadow); margin-bottom: 15px; border: 1px solid #f0f0f0; }
-.range-date-text { font-size: 0.85rem; color: #999; margin-bottom: 15px; }
-.avg-main-text { font-size: 1.3rem; font-weight: 800; color: #333; margin: 10px 0; }
-
-/* 健康建議分類顏色 */
-.health-tip { font-size: 1.1rem; padding: 15px; border-radius: 16px; margin-top: 15px; line-height: 1.5; display: none; font-weight: 600; }
-.tip-normal { background: #e7f5ff; color: #1971c2; border: 1px solid #a2d2ff; }
-.tip-warning { background: #fff4e6; color: #d9480f; border: 1px solid #ffd8a8; }
-.tip-danger { background: #fff5f5; color: #e03131; border: 1px solid #ffc9c9; }
-.tip-low { background: #f8f0fc; color: #9c36b5; border: 1px solid #eebefa; }
-
-.chart-container { background: #fff; border-radius: 24px; padding: 15px; height: 280px; margin-bottom: 25px; box-shadow: var(--shadow); }
-
-/* 下方功能按鈕 - 大字體優化 */
-.action-buttons { display: flex; gap: 12px; margin-bottom: 30px; }
-.action-buttons button { height: 65px; border-radius: 50px; font-size: 1.2rem; font-weight: 900; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-.btn-pdf { flex: 1; background: #555; color: white; }
-.btn-share { flex: 1.5; background: #06C755; color: white; }
-
-/* 彈窗按鈕 */
-.btn-save { background: var(--blue-soft); color: white; border: none; padding: 22px; border-radius: 20px; font-size: 1.4rem; font-weight: 800; opacity: 0.4; transition: 0.3s; }
-.btn-save.can-save { opacity: 1; background: var(--blue-dark); box-shadow: 0 8px 20px rgba(93, 167, 255, 0.4); }
-
-/* PDF 導出時隱藏 */
-@media print { .no-print { visibility: hidden !important; height: 0; } }
+.custom-date-panel { display: none; background: #fff; padding: 20px; border-radius: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.08); margin-bottom: 20px; border: 1px solid #eee; }
+.date-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 10px; margin-bottom: 20px; }
+.date-input-group { flex: 1; }
+.date-input-group label { display: block; font-size: 0.75rem; color: #999; margin-bottom: 5px; }
+.date-input-group input { width: 100%; padding: 12px; border: 2px solid #F0F4F8; border-radius: 12px; font-size: 0.85rem; }
+.btn-apply-fancy { width: 100%; background: var(--blue-dark); color: white; border: none; padding: 15px; border-radius: 15px; font-weight: 800; }
+.summary-card { background: #fff; padding: 25px; border-radius: 24px; box-shadow: var(--shadow); margin-bottom: 15px; }
+.avg-main-text { font-size: 1.4rem; font-weight: 800; color: #333; margin: 10px 0; }
+.chart-container { background: #fff; border-radius: 20px; padding: 10px; height: 260px; margin-bottom: 25px; }
+.btn-share-large { width: 100%; background: #06C755; color: white; border: none; padding: 20px; border-radius: 50px; font-size: 1.3rem; font-weight: 900; margin-bottom: 40px; }
+.modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(8px); align-items: center; justify-content: center; z-index: 999; }
+.modal-content { background: white; width: 90%; max-width: 380px; padding: 30px 20px; border-radius: 30px; }
+.input-row { margin-bottom: 18px; }
+.input-row label { display: block; font-weight: bold; margin-bottom: 8px; font-size: 1.1rem; color: #555; }
+.input-row input { width: 100%; padding: 18px; font-size: 1.6rem; border: 2px solid #eee; border-radius: 18px; background: #fdfdfd; text-align: center; }
+.modal-buttons { display: flex; flex-direction: column; gap: 12px; margin-top: 30px; }
+.btn-save { background: var(--blue-soft); color: white; border: none; padding: 22px; border-radius: 20px; font-size: 1.5rem; font-weight: 800; opacity: 0.4; transition: 0.3s; }
+.btn-save.can-save { opacity: 1; background: var(--blue-dark); }
+.btn-cancel { background: transparent; color: #bbb; border: none; padding: 10px; font-size: 1.1rem; }
+.history-item { background: #f9f9f9; padding: 18px; border-radius: 18px; margin-bottom: 12px; border-left: 6px solid var(--blue-soft); }
