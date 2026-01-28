@@ -79,6 +79,21 @@
         </section>
     </main>
 
+    <div id="login-modal" class="custom-login-modal">
+        <div class="glass-content">
+            <div class="modal-icon">🔒</div>
+            <h2>雲端帳號登入</h2>
+            <p>輸入代號即可同步 1/26~1/28 數據</p>
+            <div class="input-group">
+                <input type="text" id="login-input" placeholder="請輸入您的帳號代號..." autocomplete="off">
+                <span class="input-hint">💡 建議包含英文與數字以防撞名</span>
+            </div>
+            <div class="modal-actions">
+                <button id="confirm-login-btn" class="primary-btn">確認進入</button>
+            </div>
+        </div>
+    </div>
+
     <div id="pdf-wrapper" style="visibility: hidden; position: absolute; left: -9999px; top: 0; width: 800px;">
         <div id="pdf-template" style="padding: 40px; background: #fff;">
             <h1 style="font-size: 32px; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 20px;">血壓健康評估報表</h1>

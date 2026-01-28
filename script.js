@@ -8,48 +8,60 @@ let currentFilteredData = [];
 let userId = localStorage.getItem('bp_user_id');
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // 1. 執行新版磨砂玻璃登入檢查
     await checkUserId();
+    // 2. 初始化畫面
     initApp();
-    setupInputListeners();
 });
 
-// PM 防撞名機制：雲端唯一性檢查
+// 新版 UX 登入邏輯：支援本人登入同步，不再自我阻擋
 async function checkUserId() {
     if (userId) {
         document.getElementById('user-info').innerText = `👤 用戶: ${userId}`;
         return;
     }
 
-    let isUnique = false;
-    while (!isUnique) {
-        let inputId = prompt("【數據雲端同步】\n請輸入代號或手機。若此代號已有人使用，系統將要求重新輸入以防數據混淆：");
-        
-        if (!inputId || inputId.trim() === "") {
-            inputId = "User_" + Math.floor(Math.random() * 9000 + 1000);
-            alert(`已為您生成隨機帳號：${inputId}`);
-        }
-        inputId = inputId.trim();
+    const modal = document.getElementById('login-modal');
+    const input = document.getElementById('login-input');
+    const btn = document.getElementById('confirm-login-btn');
 
-        try {
-            const response = await fetch(API_URL, {
-                method: 'POST',
-                body: JSON.stringify({ action: "check", userId: inputId })
-            });
-            const result = await response.json();
-            if (result.exists) {
-                alert(`⚠️ 代號「${inputId}」已被占用！請換一個代號。`);
-            } else {
-                userId = inputId;
-                localStorage.setItem('bp_records', '[]'); 
-                localStorage.setItem('bp_user_id', userId);
-                isUnique = true;
+    modal.style.display = 'flex';
+
+    return new Promise((resolve) => {
+        btn.onclick = async () => {
+            let inputId = input.value.trim();
+            if (inputId === "") { alert("請輸入帳號代號"); return; }
+
+            btn.disabled = true;
+            btn.innerText = "驗證中...";
+
+            try {
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    body: JSON.stringify({ action: "check", userId: inputId })
+                });
+                const result = await response.json();
+
+                if (result.exists) {
+                    if (confirm(`代號「${inputId}」已有紀錄。\n\n確認是本人要同步 1/26~1/28 等數據嗎？`)) {
+                        finishLogin(inputId, modal); resolve();
+                    } else {
+                        btn.disabled = false; btn.innerText = "確認進入";
+                    }
+                } else {
+                    finishLogin(inputId, modal); resolve();
+                }
+            } catch (e) {
+                finishLogin(inputId, modal); resolve();
             }
-        } catch (e) {
-            userId = inputId; // 離線保底
-            localStorage.setItem('bp_user_id', userId);
-            isUnique = true;
-        }
-    }
+        };
+    });
+}
+
+function finishLogin(id, modal) {
+    userId = id;
+    localStorage.setItem('bp_user_id', userId);
+    modal.style.display = 'none';
     document.getElementById('user-info').innerText = `👤 用戶: ${userId}`;
 }
 
@@ -76,32 +88,18 @@ async function syncFromCloud() {
         if (cloudRecords && cloudRecords.length > 0) {
             localStorage.setItem('bp_records', JSON.stringify(cloudRecords));
         }
-    } catch (e) { console.log("同步中..."); }
+    } catch (e) { console.log("雲端同步中..."); }
     checkTodayStatus();
     refreshDisplay();
 }
 
-function updateTargetDateDisplay() {
-    const dateStr = currentTargetDate.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
-    document.getElementById('target-date-display').innerText = dateStr;
-}
-
-function changeDate(offset) {
-    currentTargetDate.setDate(currentTargetDate.getDate() + offset);
-    updateTargetDateDisplay();
-    checkTodayStatus(); 
-    refreshDisplay();
-}
-
+// 儲存邏輯優化：先存本地（體感快）+ 背景傳雲端
 async function saveData() {
     const sys = parseInt(document.getElementById('sys').value, 10);
     const dia = parseInt(document.getElementById('dia').value, 10);
     const pulse = parseInt(document.getElementById('pulse').value, 10);
     
-    if (isNaN(sys) || isNaN(dia) || isNaN(pulse)) {
-        alert("請輸入正確數字");
-        return;
-    }
+    if (isNaN(sys) || isNaN(dia) || isNaN(pulse)) { alert("請輸入數字"); return; }
     
     const record = {
         timestamp: currentTargetDate.getTime(),
@@ -115,6 +113,10 @@ async function saveData() {
     records.unshift(record);
     localStorage.setItem('bp_records', JSON.stringify(records));
 
+    closeModal();
+    refreshDisplay();
+    checkTodayStatus();
+
     if (API_URL.startsWith("https")) {
         fetch(API_URL, {
             method: 'POST',
@@ -122,17 +124,14 @@ async function saveData() {
             body: JSON.stringify({ action: "save", userId: userId, record: record })
         });
     }
-    closeModal();
-    refreshDisplay();
-    checkTodayStatus();
 }
 
+// UI 輔助邏輯（維持優化版）
 function refreshDisplay() {
     const all = JSON.parse(localStorage.getItem('bp_records') || '[]');
     const { filtered, start, end } = filterRecordsByRange(all);
     currentFilteredData = filtered;
     document.getElementById('card-date-display').innerText = (currentRange === 'today') ? `${start}` : `${start} ~ ${end}`;
-    
     document.getElementById('history-list').innerHTML = filtered.slice(0, 5).map(r => `
         <div class="history-item">
             <div style="font-size:0.8rem;color:#999">${r.date}</div>
@@ -141,15 +140,13 @@ function refreshDisplay() {
                 <span>💓 ${r.pulse}</span>
             </div>
         </div>`).join('');
-    
     updateChart(filtered);
     calculateSummary(filtered);
 }
 
 async function exportPDF() {
     if (/Line/i.test(navigator.userAgent)) {
-        alert("⚠️ LINE 內建瀏覽器無法下載檔案。\n請點選右上角『三個點』，選擇『使用預設瀏覽器開啟』即可正常下載！");
-        return;
+        alert("⚠️ LINE 內建瀏覽器限制下載檔案。\n請點選右上角『三個點』，選擇『使用預設瀏覽器開啟』即可下載！"); return;
     }
     const btn = document.querySelector('.btn-pdf-large');
     btn.innerText = "⏳ 格式化報表中...";
@@ -163,9 +160,9 @@ async function exportPDF() {
         </tr>`).join('');
     const element = document.getElementById('pdf-template');
     const opt = { 
-        margin: [10, 5], filename: `血壓報告_${userId}.pdf`, 
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 1000 }, 
-        jsPDF: { format: 'a4', orientation: 'portrait' }
+        margin: [10, 5], filename: `血壓報告_${userId}.pdf`,
+        html2canvas: { scale: 3, useCORS: true, windowWidth: 1000 }, 
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
     };
     try { await html2pdf().set(opt).from(element).save(); } finally { btn.innerText = "📄 產出 PDF 報表"; }
 }
@@ -184,16 +181,28 @@ function filterRecordsByRange(records) {
     return { filtered, start: s.toLocaleDateString('zh-TW'), end: e.toLocaleDateString('zh-TW') };
 }
 
+function updateChart(filtered) { 
+    const ctx = document.getElementById('bpChart').getContext('2d'); if (bpChart) bpChart.destroy(); if (filtered.length === 0) return; 
+    const sorted = [...filtered].sort((a, b) => a.timestamp - b.timestamp); 
+    bpChart = new Chart(ctx, { type: 'line', data: { labels: sorted.map(r => r.date.slice(5)), datasets: [{ label: '收縮壓', data: sorted.map(r => r.sys), borderColor: '#A2D2FF', tension: 0.3 }, { label: '舒張壓', data: sorted.map(r => r.dia), borderColor: '#FFC2C7', tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } }); 
+}
+
+function calculateSummary(filtered) {
+    const avgText = document.getElementById('avg-text');
+    if (filtered.length === 0) { avgText.innerText = "尚無資料"; return; }
+    const avgSys = Math.round(filtered.reduce((acc, r) => acc + r.sys, 0) / filtered.length);
+    const avgDia = Math.round(filtered.reduce((acc, r) => acc + r.dia, 0) / filtered.length);
+    avgText.innerText = `平均值：${avgSys}/${avgDia} mmHg`;
+    document.getElementById('pdf-avg-main').innerText = avgText.innerText;
+}
+
+function updateTargetDateDisplay() { document.getElementById('target-date-display').innerText = currentTargetDate.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' }); }
+function changeDate(offset) { currentTargetDate.setDate(currentTargetDate.getDate() + offset); updateTargetDateDisplay(); checkTodayStatus(); refreshDisplay(); }
 function openModal(type) { currentType = type; document.getElementById('modal-title').innerText = (type === 'morning' ? '☀️ 早晨紀錄' : '🌙 晚間紀錄'); document.getElementById('log-modal').style.display = 'flex'; }
 function closeModal() { document.getElementById('log-modal').style.display = 'none'; document.querySelectorAll('#log-modal input').forEach(i => i.value = ''); }
 function setRange(range) { currentRange = range; document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active')); document.getElementById(`btn-${range}`).classList.add('active'); document.getElementById('custom-date-panel').style.display = 'none'; refreshDisplay(); }
-function toggleCustomRange() { 
-    const p = document.getElementById('custom-date-panel'); const btn = document.getElementById('btn-custom');
-    if (p.style.display === 'block') { p.style.display = 'none'; btn.classList.remove('active'); } 
-    else { document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active')); p.style.display = 'block'; btn.classList.add('active'); }
-}
+function toggleCustomRange() { const p = document.getElementById('custom-date-panel'); const btn = document.getElementById('btn-custom'); if (p.style.display === 'block') { p.style.display = 'none'; btn.classList.remove('active'); } else { document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active')); p.style.display = 'block'; btn.classList.add('active'); } }
 function applyCustomRange() { currentRange = 'custom'; refreshDisplay(); }
-function setupInputListeners() {}
 function checkTodayStatus() {
     const targetKey = currentTargetDate.toLocaleDateString('zh-TW');
     const records = JSON.parse(localStorage.getItem('bp_records') || '[]');
@@ -204,17 +213,5 @@ function checkTodayStatus() {
     document.getElementById('evening-card').className = 'log-card evening' + (eRec ? ' evening-done completed' : '');
     document.getElementById('evening-status').innerText = eRec ? `已填: ${eRec.sys}/${eRec.dia}` : '尚未填寫';
 }
-function shareToLine() { const msg = `【血壓回報】${userId}\n📊 區間：${document.getElementById('card-date-display').innerText}\n📈 ${document.getElementById('avg-text').innerText}\n感謝使用心跳守護！`; window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank'); }
-function updateChart(filtered) { const ctx = document.getElementById('bpChart').getContext('2d'); if (bpChart) bpChart.destroy(); if (filtered.length === 0) return; const sorted = [...filtered].sort((a, b) => a.timestamp - b.timestamp); bpChart = new Chart(ctx, { type: 'line', data: { labels: sorted.map(r => r.date.split('年')[1] || r.date), datasets: [{ label: '收縮壓', data: sorted.map(r => r.sys), borderColor: '#A2D2FF', tension: 0.3 }, { label: '舒張壓', data: sorted.map(r => r.dia), borderColor: '#FFC2C7', tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } }); }
-function calculateSummary(filtered) {
-    const avgText = document.getElementById('avg-text');
-    if (filtered.length === 0) { avgText.innerText = "尚無資料"; document.getElementById('health-tip').style.display='none'; return; }
-    const avgSys = Math.round(filtered.reduce((acc, r) => acc + r.sys, 0) / filtered.length);
-    const avgDia = Math.round(filtered.reduce((acc, r) => acc + r.dia, 0) / filtered.length);
-    avgText.innerText = `平均值：${avgSys}/${avgDia} mmHg`;
-    const tipBox = document.getElementById('health-tip');
-    tipBox.style.display = 'block';
-    if (avgSys < 120 && avgDia < 80) { tipBox.className='health-tip tip-normal'; tipBox.querySelector('.tip-title').innerText='✅ 健康達標'; tipBox.querySelector('.tip-content').innerText='數值很漂亮，請繼續維持。'; }
-    else { tipBox.className='health-tip tip-danger'; tipBox.querySelector('.tip-title').innerText='⚠️ 注意波動'; tipBox.querySelector('.tip-content').innerText='請留意飲食與作息。'; }
-    document.getElementById('pdf-avg-main').innerText = avgText.innerText;
-}
+function shareToLine() { const msg = `【血壓回報】${userId}\n📊 區間：${document.getElementById('card-date-display').innerText}\n📈 ${document.getElementById('avg-text').innerText}`; window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank'); }
+function setupInputListeners() {}
