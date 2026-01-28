@@ -17,8 +17,19 @@ body { margin: 0; font-family: -apple-system, sans-serif; background: #FFF; disp
 .icon { font-size: 2.2rem; display: block; opacity: 0.4; }
 .log-card.completed .icon { opacity: 1; }
 
-.filter-buttons { display: flex; gap: 5px; margin-bottom: 10px; }
-.filter-buttons button { flex: 1; padding: 12px 5px; border-radius: 12px; border: 1px solid #eee; background: #f8f9fa; font-weight: 600; cursor: pointer; }
+/* 優化篩選按鈕：字體放大並維持同一行 */
+.filter-buttons { display: flex; gap: 4px; margin-bottom: 10px; width: 100%; overflow: hidden; }
+.filter-buttons button { 
+    flex: 1 1 0; 
+    padding: 12px 2px; 
+    border-radius: 12px; 
+    border: 1px solid #eee; 
+    background: #f8f9fa; 
+    font-weight: 700; 
+    font-size: 0.95rem; /* 字體稍微放大 */
+    cursor: pointer; 
+    white-space: nowrap; /* 確保文字不換行 */
+}
 .filter-buttons button.active { background: var(--blue-soft); color: white; }
 
 .custom-date-panel { display: none; background: #fff; padding: 20px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #eee; }
@@ -29,7 +40,7 @@ body { margin: 0; font-family: -apple-system, sans-serif; background: #FFF; disp
 
 .action-buttons { display: flex; gap: 10px; margin: 20px 0 40px; width: 100%; align-items: center; }
 .btn-pdf-large { flex: 1; background: #555; color: white; border: none; padding: 15px; border-radius: 50px; font-size: 0.9rem; font-weight: 800; white-space: nowrap; cursor: pointer; }
-.btn-share-large { flex: 2; background: #06C755; color: white; border: none; padding: 18px; border-radius: 50px; font-size: 1.3rem; font-weight: 900; cursor: pointer; }
+.btn-share-large { flex: 2; background: #06C755; color: white; border: none; padding: 18px; border-radius: 50px; font-size: 1.4rem; font-weight: 900; cursor: pointer; }
 
 .summary-card { background: #fff; padding: 25px; border-radius: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); margin-bottom: 15px; border: 1px solid #f0f0f0; }
 .avg-main-text { font-size: 1.4rem; font-weight: 800; color: #333; margin: 0; }

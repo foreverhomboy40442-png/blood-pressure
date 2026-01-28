@@ -97,9 +97,10 @@ function refreshDisplay() {
     const rangeText = (currentRange === 'today') ? `${start}` : `${start} ~ ${end}`;
     document.getElementById('card-date-display').innerText = rangeText;
     
+    // 優化：移除紀錄中的括號 (早/晚) 文字
     document.getElementById('history-list').innerHTML = filtered.slice(0, 5).map(r => `
         <div class="history-item">
-            <div style="font-size:0.85rem;color:#999">${r.date} (${r.type === 'morning' ? '早' : '晚'})</div>
+            <div style="font-size:0.85rem;color:#999">${r.date}</div>
             <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:1.1rem">
                 <span>${r.sys}/${r.dia} mmHg</span>
                 <span>💓 ${r.pulse}</span>
@@ -112,25 +113,23 @@ function refreshDisplay() {
 
 async function exportPDF() {
     const btn = document.querySelector('.btn-pdf-large');
-    if (typeof html2pdf === 'undefined') { alert("載入中..."); return; }
-    if (currentFilteredData.length === 0) { alert("無資料。"); return; }
-    
+    if (typeof html2pdf === 'undefined') return;
     btn.innerText = "⏳ 格式化報表中...";
     document.getElementById('pdf-range').innerText = `報告區間：${document.getElementById('card-date-display').innerText}`;
     const tableBody = document.getElementById('pdf-table-body');
     tableBody.innerHTML = currentFilteredData.sort((a, b) => b.timestamp - a.timestamp).map(r => `
         <tr style="page-break-inside: avoid;">
-            <td style="border: 1px solid #000; padding: 10px;">${r.date}</td>
-            <td style="border: 1px solid #000; padding: 10px; text-align: center;">${r.type === 'morning' ? '早晨' : '晚間'}</td>
-            <td style="border: 1px solid #000; padding: 10px; text-align: center; font-weight: bold; font-size:20px;">${r.sys} / ${r.dia}</td>
-            <td style="border: 1px solid #000; padding: 10px; text-align: center;">${r.pulse}</td>
+            <td style="border:1px solid #000; padding:10px;">${r.date}</td>
+            <td style="border:1px solid #000; padding:10px; text-align: center;">${r.type === 'morning' ? '早晨' : '晚間'}</td>
+            <td style="border:1px solid #000; padding:10px; text-align: center; font-weight: bold; font-size:20px;">${r.sys} / ${r.dia}</td>
+            <td style="border:1px solid #000; padding:10px; text-align: center;">${r.pulse}</td>
         </tr>`).join('');
 
     const element = document.getElementById('pdf-template');
     const opt = { 
         margin: [10, 5, 10, 5], 
         filename: `血壓評估報告_${new Date().toLocaleDateString()}.pdf`, 
-        image: { type: 'jpeg', quality: 1 }, 
+        image: { type: 'jpeg', quality: 0.98 }, 
         html2canvas: { scale: 2, useCORS: true, scrollY: 0, windowWidth: 800 }, 
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] }
@@ -192,19 +191,10 @@ function updateChart(filtered) {
     }); 
 }
 
-// 優化：純白話文標題與內容，無多餘醫學術語
 function getAdvice(sys, dia) { 
-    if (sys < 90 || dia < 60) {
-        return { title: "📉 數值偏低", content: "請注意是否頭暈，建議補充水分或諮詢醫師。", class: "tip-danger" };
-    }
-    if (sys < 120 && dia < 80) {
-        return { title: "✅ 健康達標", content: "數值很漂亮！請繼續維持規律作息與運動。", class: "tip-normal" };
-    }
-    if (sys < 130 && dia < 80) {
-        return { title: "⚠️ 稍有波動", content: "請留意飲食清淡，減少鹽分攝取並多休息。", class: "tip-warning" };
-    }
-    if (sys < 140 || dia < 90) {
-        return { title: "🚨 警戒提醒", content: "建議放鬆心情重複測量，若持續請諮詢醫師。", class: "tip-danger" };
-    }
+    if (sys < 90 || dia < 60) return { title: "📉 數值偏低", content: "請注意是否頭暈，建議補充水分或諮詢醫師。", class: "tip-danger" };
+    if (sys < 120 && dia < 80) return { title: "✅ 健康達標", content: "數值很漂亮！請繼續維持規律作息與運動。", class: "tip-normal" };
+    if (sys < 130 && dia < 80) return { title: "⚠️ 稍有波動", content: "請留意飲食清淡，減少鹽分攝取並多休息。", class: "tip-warning" };
+    if (sys < 140 || dia < 90) return { title: "🚨 警戒提醒", content: "建議放鬆心情重複測量，若持續請諮詢醫師。", class: "tip-danger" };
     return { title: "🆘 顯著偏高", content: "數值顯著偏高，請務必諮詢醫師並遵照醫囑。", class: "tip-danger" };
 }
