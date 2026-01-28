@@ -83,7 +83,6 @@ function refreshDisplay() {
     updateChart(filtered); calculateSummary(filtered);
 }
 
-// 優化：摘要加入平均值字樣
 function calculateSummary(filtered) {
     const avgText = document.getElementById('avg-text');
     const tipContent = document.getElementById('tip-content');
@@ -112,7 +111,7 @@ function filterRecordsByRange(records) {
     return { filtered, start: s.toLocaleDateString('zh-TW'), end: e.toLocaleDateString('zh-TW') };
 }
 
-// PDF 終極修復：置頂、置中、防截斷
+// PDF 置中優化：鎖定視窗寬度與置中渲染
 async function exportPDF() {
     const btn = document.querySelector('.btn-pdf-large'); btn.innerText = "⏳ 製作中...";
     document.getElementById('pdf-range-display').innerText = document.getElementById('card-date-display').innerText;
@@ -122,25 +121,32 @@ async function exportPDF() {
     if (currentFilteredData.length === 0) {
         tableBody.innerHTML = '<tr><td colspan="4" style="padding:30px; border:1px solid #000; text-align:center;">尚未有紀錄數據</td></tr>';
     } else {
-        // 優化：表格行加入分頁保護與置中渲染
         tableBody.innerHTML = currentFilteredData.sort((a, b) => b.timestamp - a.timestamp).map(r => `
-            <tr style="border-bottom: 2px solid #000; page-break-inside: avoid;">
-                <td style="border: 1.5px solid #000; padding: 15px; text-align: center; white-space: nowrap;">${r.date}</td>
-                <td style="border: 1.5px solid #000; padding: 15px; text-align: center; white-space: nowrap;">${r.type === 'morning' ? '早晨' : '晚間'}</td>
-                <td style="border: 1.5px solid #000; padding: 15px; text-align: center; font-weight: bold; font-size: 22px; white-space: nowrap;">${r.sys} / ${r.dia}</td>
-                <td style="border: 1.5px solid #000; padding: 15px; text-align: center; white-space: nowrap;">${r.pulse}</td>
+            <tr style="border-bottom: 2.5px solid #000; page-break-inside: avoid;">
+                <td style="border: 2px solid #000; padding: 15px; text-align: center; white-space: nowrap;">${r.date}</td>
+                <td style="border: 2px solid #000; padding: 15px; text-align: center; white-space: nowrap;">${r.type === 'morning' ? '早晨' : '晚間'}</td>
+                <td style="border: 2px solid #000; padding: 15px; text-align: center; font-weight: bold; font-size: 22px; white-space: nowrap;">${r.sys} / ${r.dia}</td>
+                <td style="border: 2px solid #000; padding: 15px; text-align: center; white-space: nowrap;">${r.pulse}</td>
             </tr>`).join('');
     }
     
     const element = document.getElementById('pdf-template');
     const opt = { 
-        margin: [10, 5], 
+        margin: [15, 10], // 對稱留白
         filename: `血壓記錄報表_${userId}.pdf`, 
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 800, y: 0, scrollY: 0 }, // 鎖定 Y 軸解決置頂問題
+        html2canvas: { 
+            scale: 2, 
+            useCORS: true, 
+            windowWidth: 800, // 重要：鎖定抓取寬度確保置中
+            x: 0, 
+            y: 0, 
+            scrollY: 0 
+        },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all', 'css', 'legacy'] } // 全域防斷字機制
+        pagebreak: { mode: ['avoid-all'] }
     };
+
     try { await html2pdf().set(opt).from(element).save(); } catch(e) { alert("PDF 產出異常"); } finally { btn.innerText = "📄 產出 PDF 報表"; }
 }
 

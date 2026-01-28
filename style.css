@@ -33,7 +33,6 @@ body { margin: 0; font-family: -apple-system, "Microsoft JhengHei", sans-serif; 
 .btn-apply-fancy { width: 100%; background: var(--blue-dark); color: white; border: none; padding: 14px; border-radius: 50px; font-weight: 800; cursor: pointer; }
 .large-btn-text { font-size: 1.35rem !important; }
 
-/* 數據摘要佈局 */
 .summary-card { background: #fff; padding: 25px; border-radius: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; margin-bottom: 15px; }
 .summary-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f8f8f8; padding-bottom: 10px; margin-bottom: 15px; }
 .header-date { font-size: 0.8rem; color: #aaa; font-weight: 700; }
@@ -42,23 +41,22 @@ body { margin: 0; font-family: -apple-system, "Microsoft JhengHei", sans-serif; 
 .tip-title { font-weight: 800; color: #D97706; margin-bottom: 8px; font-size: 1rem; }
 .tip-content { font-size: 0.95rem; color: #92400E; line-height: 1.6; }
 
-/* 彈窗樣式 */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); z-index: 2000; align-items: center; justify-content: center; }
 .modal-card { background: #fff; width: 90%; max-width: 400px; padding: 40px 30px; border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); text-align: center; }
 .modal-icon { font-size: 4rem; margin-bottom: 15px; }
-.large-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 10px; }
+
+/* 優化：歡迎標語強制單行 */
+.large-title { 
+    font-size: 1.7rem; 
+    font-weight: 900; 
+    margin-bottom: 12px; 
+    white-space: nowrap; /* 強制不換行 */
+}
 .warm-text { color: #888; font-size: 1.1rem; line-height: 1.5; margin-bottom: 25px; }
 .giant-input { width: 100%; padding: 20px; border-radius: 20px; border: 2.5px solid #eee; font-size: 1.5rem; text-align: center; margin-bottom: 25px; outline: none; background: #fafafa; }
 .btn-warm-save { width: 100%; background: linear-gradient(135deg, var(--blue-soft), var(--blue-dark)); color: white; border: none; padding: 20px; border-radius: 50px; font-size: 1.3rem; font-weight: 800; cursor: pointer; }
 
-/* 優化：PDF 按鈕加大、文字加大、不換行 */
-.pdf-btn-style {
-    flex: 1.2 !important; 
-    padding: 18px 5px !important; 
-    font-size: 0.95rem !important; 
-    font-weight: 900 !important; 
-    white-space: nowrap !important;
-}
+.pdf-btn-style { flex: 1.2 !important; padding: 18px 5px !important; font-size: 0.95rem !important; font-weight: 900 !important; white-space: nowrap !important; }
 
 .container { width: 92%; max-width: 450px; }
 .date-stepper { display: flex; align-items: center; justify-content: center; gap: 15px; margin-bottom: 15px; }
