@@ -83,7 +83,6 @@ function refreshDisplay() {
     updateChart(filtered); calculateSummary(filtered);
 }
 
-// 優化：依照要求格式顯示平均值，且確保同一行
 function calculateSummary(filtered) {
     const avgText = document.getElementById('avg-text');
     const tipContent = document.getElementById('tip-content');
@@ -112,6 +111,7 @@ function filterRecordsByRange(records) {
     return { filtered, start: s.toLocaleDateString('zh-TW'), end: e.toLocaleDateString('zh-TW') };
 }
 
+// PDF 物理置中與原子化換頁修復
 async function exportPDF() {
     const btn = document.querySelector('.btn-pdf-large'); btn.innerText = "製作中...";
     document.getElementById('pdf-range-display').innerText = document.getElementById('card-date-display').innerText;
@@ -120,21 +120,31 @@ async function exportPDF() {
         tableBody.innerHTML = '<tr><td colspan="4" style="padding:30px; border:1px solid #000; text-align:center;">尚未有紀錄數據</td></tr>';
     } else {
         tableBody.innerHTML = currentFilteredData.sort((a, b) => b.timestamp - a.timestamp).map(r => `
-            <tr style="border-bottom: 2px solid #000; page-break-inside: avoid;">
+            <tr style="border-bottom: 2px solid #000; page-break-inside: avoid; break-inside: avoid;">
                 <td style="border: 2px solid #000; padding: 15px; text-align: center; white-space: nowrap;">${r.date}</td>
                 <td style="border: 2px solid #000; padding: 15px; text-align: center; white-space: nowrap;">${r.type === 'morning' ? '早晨' : '晚間'}</td>
                 <td style="border: 2px solid #000; padding: 15px; text-align: center; font-weight: bold; font-size: 20px; white-space: nowrap;">${r.sys} / ${r.dia}</td>
                 <td style="border: 2px solid #000; padding: 15px; text-align: center; white-space: nowrap;">${r.pulse}</td>
             </tr>`).join('');
     }
+    
     const element = document.getElementById('pdf-template');
     const opt = { 
         margin: [10, 10, 10, 10], 
         filename: `血壓記錄報表_${userId}.pdf`, 
         image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { scale: 2, useCORS: true, windowWidth: 750, scrollY: 0, y: 0, x: 0, scrollX: 0 },
+        html2canvas: { 
+            scale: 2, 
+            useCORS: true, 
+            windowWidth: 750, // 鎖定寬度解決置中位移
+            width: 750, 
+            scrollY: 0, 
+            y: 0, 
+            x: 0, 
+            scrollX: 0 
+        },
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['avoid-all'] }
+        pagebreak: { mode: 'css' } // 重要：改用 CSS 模式以嚴格遵守「避免中斷」規則
     };
     try { await html2pdf().set(opt).from(element).save(); } finally { btn.innerText = "產出 PDF 報表"; }
 }
