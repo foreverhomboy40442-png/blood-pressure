@@ -1,18 +1,89 @@
+const API_URL = "https://script.google.com/macros/s/AKfycbzjveYTkQRe5h7OP1AkuJEpI4UrRHY1v83G-luKPjkNm4yUqogRr_4HTm5l9-vEqxg/exec"; 
+
 let bpChart = null;
 let currentRange = 'week';
 let currentType = '';
 let currentTargetDate = new Date(); 
 let currentFilteredData = [];
+let userId = localStorage.getItem('bp_user_id');
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    await checkUserId();
     initApp();
     setupInputListeners();
 });
 
-function initApp() {
+// PM 防撞名機制：雲端唯一性檢查
+async function checkUserId() {
+    if (userId) {
+        document.getElementById('user-info').innerText = `👤 用戶: ${userId}`;
+        return;
+    }
+
+    let isUnique = false;
+    while (!isUnique) {
+        let inputId = prompt("【數據雲端同步】\n請輸入代號或手機。若此代號已有人使用，系統將要求重新輸入以防數據混淆：");
+        
+        if (!inputId || inputId.trim() === "") {
+            inputId = "User_" + Math.floor(Math.random() * 9000 + 1000);
+            alert(`已為您生成隨機帳號：${inputId}`);
+        }
+        inputId = inputId.trim();
+
+        try {
+            const response = await fetch(API_URL, {
+                method: 'POST',
+                body: JSON.stringify({ action: "check", userId: inputId })
+            });
+            const result = await response.json();
+            if (result.exists) {
+                alert(`⚠️ 代號「${inputId}」已被占用！請換一個代號。`);
+            } else {
+                userId = inputId;
+                localStorage.setItem('bp_records', '[]'); 
+                localStorage.setItem('bp_user_id', userId);
+                isUnique = true;
+            }
+        } catch (e) {
+            userId = inputId; // 離線保底
+            localStorage.setItem('bp_user_id', userId);
+            isUnique = true;
+        }
+    }
+    document.getElementById('user-info').innerText = `👤 用戶: ${userId}`;
+}
+
+function resetUser() {
+    if(confirm("切換帳號會同步不同的雲端數據，確定更換嗎？")) {
+        localStorage.removeItem('bp_user_id');
+        location.reload();
+    }
+}
+
+async function initApp() {
     updateTargetDateDisplay();
+    await syncFromCloud();
+}
+
+async function syncFromCloud() {
+    if (!API_URL.startsWith("https")) return;
+    try {
+        const response = await fetch(API_URL, {
+            method: 'POST',
+            body: JSON.stringify({ action: "read", userId: userId })
+        });
+        const cloudRecords = await response.json();
+        if (cloudRecords && cloudRecords.length > 0) {
+            localStorage.setItem('bp_records', JSON.stringify(cloudRecords));
+        }
+    } catch (e) { console.log("同步中..."); }
     checkTodayStatus();
     refreshDisplay();
+}
+
+function updateTargetDateDisplay() {
+    const dateStr = currentTargetDate.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
+    document.getElementById('target-date-display').innerText = dateStr;
 }
 
 function changeDate(offset) {
@@ -22,112 +93,79 @@ function changeDate(offset) {
     refreshDisplay();
 }
 
-function updateTargetDateDisplay() {
-    const dateStr = currentTargetDate.toLocaleDateString('zh-TW', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' });
-    document.getElementById('target-date-display').innerText = dateStr;
-}
-
-function saveData() {
+async function saveData() {
     const sys = parseInt(document.getElementById('sys').value, 10);
     const dia = parseInt(document.getElementById('dia').value, 10);
     const pulse = parseInt(document.getElementById('pulse').value, 10);
+    
     if (isNaN(sys) || isNaN(dia) || isNaN(pulse)) {
         alert("請輸入正確數字");
         return;
     }
-    const dateKey = currentTargetDate.toLocaleDateString('zh-TW');
-    let records = JSON.parse(localStorage.getItem('bp_records') || '[]');
-    records = records.filter(r => !(r.date === dateKey && r.type === currentType));
-    const newRecord = {
-        id: Date.now(),
+    
+    const record = {
         timestamp: currentTargetDate.getTime(),
         type: currentType,
-        date: dateKey,
-        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        date: currentTargetDate.toLocaleDateString('zh-TW'),
         sys, dia, pulse
     };
-    records.unshift(newRecord);
-    records.sort((a, b) => b.timestamp - a.timestamp);
-    localStorage.setItem('bp_records', JSON.stringify(records));
-    closeModal();
-    initApp();
-}
 
-function calculateSummary(filtered) {
-    const avgText = document.getElementById('avg-text');
-    const subAvgText = document.getElementById('sub-avg-text');
-    const tipBox = document.getElementById('health-tip');
-    const validData = filtered.filter(r => !isNaN(parseInt(r.sys, 10)));
-    if (validData.length === 0) {
-        avgText.innerText = "尚無資料";
-        subAvgText.innerText = "";
-        tipBox.style.display = 'none';
-        return;
+    let records = JSON.parse(localStorage.getItem('bp_records') || '[]');
+    records = records.filter(r => !(r.date === record.date && r.type === record.type));
+    records.unshift(record);
+    localStorage.setItem('bp_records', JSON.stringify(records));
+
+    if (API_URL.startsWith("https")) {
+        fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({ action: "save", userId: userId, record: record })
+        });
     }
-    const count = validData.length;
-    const avgSys = Math.round(validData.reduce((acc, r) => acc + parseInt(r.sys, 10), 0) / count);
-    const avgDia = Math.round(validData.reduce((acc, r) => acc + parseInt(r.dia, 10), 0) / count);
-    const avgPulse = Math.round(validData.reduce((acc, r) => acc + parseInt(r.pulse, 10), 0) / count);
-    const label = (currentRange === 'today') ? "今日平均" : (currentRange === 'week' ? "近一週平均" : (currentRange === 'month' ? "近一個月平均" : "累計平均"));
-    avgText.innerText = `${label}：${avgSys}/${avgDia} mmHg`;
-    subAvgText.innerHTML = `統計筆數：${count} 筆 | 平均心率：${avgPulse} bpm`;
-    const advice = getAdvice(avgSys, avgDia);
-    tipBox.querySelector('.tip-title').innerText = advice.title;
-    tipBox.querySelector('.tip-content').innerText = advice.content;
-    tipBox.className = `health-tip ${advice.class}`;
-    tipBox.style.display = 'block';
+    closeModal();
+    refreshDisplay();
+    checkTodayStatus();
 }
 
 function refreshDisplay() {
     const all = JSON.parse(localStorage.getItem('bp_records') || '[]');
     const { filtered, start, end } = filterRecordsByRange(all);
     currentFilteredData = filtered;
-    const rangeText = (currentRange === 'today') ? `${start}` : `${start} ~ ${end}`;
-    document.getElementById('card-date-display').innerText = rangeText;
+    document.getElementById('card-date-display').innerText = (currentRange === 'today') ? `${start}` : `${start} ~ ${end}`;
+    
     document.getElementById('history-list').innerHTML = filtered.slice(0, 5).map(r => `
         <div class="history-item">
-            <div style="font-size:0.85rem;color:#999">${r.date}</div>
-            <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:1.1rem">
+            <div style="font-size:0.8rem;color:#999">${r.date}</div>
+            <div style="display:flex;justify-content:space-between;font-weight:800;font-size:1.1rem">
                 <span>${r.sys}/${r.dia} mmHg</span>
                 <span>💓 ${r.pulse}</span>
             </div>
         </div>`).join('');
+    
     updateChart(filtered);
     calculateSummary(filtered);
 }
 
-// 核心優化：偵測 LINE 環境並引導跳轉至外部瀏覽器
 async function exportPDF() {
-    const btn = document.querySelector('.btn-pdf-large');
-    
-    // 偵測 LINE 內建瀏覽器
-    const isLine = /Line/i.test(navigator.userAgent);
-    if (isLine) {
-        alert("⚠️ LINE 內建瀏覽器無法下載檔案。\n請點選右上角『三個點』或『分享圖示』，選擇『使用預設瀏覽器開啟』(Safari/Chrome) 即可正常下載！");
+    if (/Line/i.test(navigator.userAgent)) {
+        alert("⚠️ LINE 內建瀏覽器無法下載檔案。\n請點選右上角『三個點』，選擇『使用預設瀏覽器開啟』即可正常下載！");
         return;
     }
-
-    if (typeof html2pdf === 'undefined') return;
-    if (currentFilteredData.length === 0) { alert("尚未有紀錄。"); return; }
-    
+    const btn = document.querySelector('.btn-pdf-large');
     btn.innerText = "⏳ 格式化報表中...";
-    document.getElementById('pdf-range').innerText = `報告區間：${document.getElementById('card-date-display').innerText}`;
     const tableBody = document.getElementById('pdf-table-body');
     tableBody.innerHTML = currentFilteredData.sort((a, b) => b.timestamp - a.timestamp).map(r => `
-        <tr style="page-break-inside: avoid; border-bottom: 1px solid #000;">
-            <td style="border: 1px solid #000; padding: 12px;">${r.date}</td>
-            <td style="border: 1px solid #000; padding: 12px; text-align: center;">${r.type === 'morning' ? '早晨' : '晚間'}</td>
-            <td style="border: 1px solid #000; padding: 12px; text-align: center; font-weight: bold; font-size:24px;">${r.sys} / ${r.dia}</td>
-            <td style="border: 1px solid #000; padding: 12px; text-align: center;">${r.pulse}</td>
+        <tr style="border-bottom: 1px solid #000;">
+            <td style="padding: 10px; border: 1px solid #000;">${r.date}</td>
+            <td style="text-align: center; border: 1px solid #000;">${r.type === 'morning' ? '早晨' : '晚間'}</td>
+            <td style="text-align: center; font-weight: bold; border: 1px solid #000;">${r.sys}/${r.dia}</td>
+            <td style="text-align: center; border: 1px solid #000;">${r.pulse}</td>
         </tr>`).join('');
     const element = document.getElementById('pdf-template');
     const opt = { 
-        margin: [10, 5], 
-        filename: `血壓健康報告_${new Date().toLocaleDateString()}.pdf`, 
-        image: { type: 'jpeg', quality: 1 }, 
-        html2canvas: { scale: 2, useCORS: true, scrollY: 0, windowWidth: 1000 }, 
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        pagebreak: { mode: ['css', 'legacy'] }
+        margin: [10, 5], filename: `血壓報告_${userId}.pdf`, 
+        html2canvas: { scale: 2, useCORS: true, windowWidth: 1000 }, 
+        jsPDF: { format: 'a4', orientation: 'portrait' }
     };
     try { await html2pdf().set(opt).from(element).save(); } finally { btn.innerText = "📄 產出 PDF 報表"; }
 }
@@ -147,52 +185,36 @@ function filterRecordsByRange(records) {
 }
 
 function openModal(type) { currentType = type; document.getElementById('modal-title').innerText = (type === 'morning' ? '☀️ 早晨紀錄' : '🌙 晚間紀錄'); document.getElementById('log-modal').style.display = 'flex'; }
-function closeModal() { document.getElementById('log-modal').style.display = 'none'; document.querySelectorAll('#log-modal input').forEach(i => i.value = ''); document.getElementById('btn-save').classList.remove('can-save'); }
-function setupInputListeners() { const inputs = document.querySelectorAll('#log-modal input'); const btn = document.getElementById('btn-save'); inputs.forEach(i => i.addEventListener('input', () => { btn.classList.toggle('can-save', Array.from(inputs).every(inp => inp.value.trim() !== '')); })); }
-function setRange(range) { 
-    currentRange = range; 
-    document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active')); 
-    document.getElementById(`btn-${range}`).classList.add('active'); 
-    document.getElementById('custom-date-panel').style.display = 'none'; 
-    refreshDisplay(); 
-}
+function closeModal() { document.getElementById('log-modal').style.display = 'none'; document.querySelectorAll('#log-modal input').forEach(i => i.value = ''); }
+function setRange(range) { currentRange = range; document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active')); document.getElementById(`btn-${range}`).classList.add('active'); document.getElementById('custom-date-panel').style.display = 'none'; refreshDisplay(); }
 function toggleCustomRange() { 
-    const p = document.getElementById('custom-date-panel'); 
-    const btnCustom = document.getElementById('btn-custom');
-    if (p.style.display === 'block') {
-        p.style.display = 'none';
-        btnCustom.classList.remove('active');
-    } else {
-        document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active')); 
-        p.style.display = 'block';
-        btnCustom.classList.add('active');
-    }
+    const p = document.getElementById('custom-date-panel'); const btn = document.getElementById('btn-custom');
+    if (p.style.display === 'block') { p.style.display = 'none'; btn.classList.remove('active'); } 
+    else { document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active')); p.style.display = 'block'; btn.classList.add('active'); }
 }
 function applyCustomRange() { currentRange = 'custom'; refreshDisplay(); }
+function setupInputListeners() {}
 function checkTodayStatus() {
     const targetKey = currentTargetDate.toLocaleDateString('zh-TW');
     const records = JSON.parse(localStorage.getItem('bp_records') || '[]');
     const mRec = records.find(r => r.date === targetKey && r.type === 'morning');
     const eRec = records.find(r => r.date === targetKey && r.type === 'evening');
-    const mCard = document.getElementById('morning-card'); const eCard = document.getElementById('evening-card');
-    if (mRec) { mCard.classList.add('completed', 'morning-done'); document.getElementById('morning-status').innerText = `已填: ${mRec.sys}/${mRec.dia}`; } else { mCard.classList.remove('completed', 'morning-done'); document.getElementById('morning-status').innerText = '尚未填寫'; }
-    if (eRec) { eCard.classList.add('completed', 'evening-done'); document.getElementById('evening-status').innerText = `已填: ${eRec.sys}/${eRec.dia}`; } else { eCard.classList.remove('completed', 'evening-done'); document.getElementById('evening-status').innerText = '尚未填寫'; }
+    document.getElementById('morning-card').className = 'log-card morning' + (mRec ? ' morning-done completed' : '');
+    document.getElementById('morning-status').innerText = mRec ? `已填: ${mRec.sys}/${mRec.dia}` : '尚未填寫';
+    document.getElementById('evening-card').className = 'log-card evening' + (eRec ? ' evening-done completed' : '');
+    document.getElementById('evening-status').innerText = eRec ? `已填: ${eRec.sys}/${eRec.dia}` : '尚未填寫';
 }
-function shareToLine() { 
-    const tipTitle = document.querySelector('.tip-title').innerText;
-    const tipContent = document.querySelector('.tip-content').innerText;
-    const msg = `【心跳守護】血壓回報\n📊 查詢日期：${document.getElementById('card-date-display').innerText}\n📈 ${document.getElementById('avg-text').innerText}\n💡 建議：${tipTitle} - ${tipContent}\n\n隨時追蹤，守護健康！`; 
-    window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank'); 
-}
-function updateChart(filtered) { 
-    const ctx = document.getElementById('bpChart').getContext('2d'); if (bpChart) bpChart.destroy(); if (filtered.length === 0) return; 
-    const sorted = [...filtered].sort((a, b) => a.timestamp - b.timestamp); 
-    bpChart = new Chart(ctx, { type: 'line', data: { labels: sorted.map(r => r.date.slice(5)), datasets: [{ label: '收縮壓', data: sorted.map(r => r.sys), borderColor: '#A2D2FF', tension: 0.3 }, { label: '舒張壓', data: sorted.map(r => r.dia), borderColor: '#FFC2C7', tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } }); 
-}
-function getAdvice(sys, dia) { 
-    if (sys < 90 || dia < 60) return { title: "📉 數值偏低", content: "請注意是否頭暈，建議補充水分或諮詢醫師。", class: "tip-danger" };
-    if (sys < 120 && dia < 80) return { title: "✅ 健康達標", content: "數值很漂亮！請繼續維持規律作息與運動。", class: "tip-normal" };
-    if (sys < 130 && dia < 80) return { title: "⚠️ 稍有波動", content: "請留意飲食清淡，減少鹽分攝取並多休息。", class: "tip-warning" };
-    if (sys < 140 || dia < 90) return { title: "🚨 警戒提醒", content: "建議放鬆心情重複測量，若持續請諮詢醫師。", class: "tip-danger" };
-    return { title: "🆘 顯著偏高", content: "數值顯著偏高，請務必諮詢醫師並遵照醫囑。", class: "tip-danger" };
+function shareToLine() { const msg = `【血壓回報】${userId}\n📊 區間：${document.getElementById('card-date-display').innerText}\n📈 ${document.getElementById('avg-text').innerText}\n感謝使用心跳守護！`; window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank'); }
+function updateChart(filtered) { const ctx = document.getElementById('bpChart').getContext('2d'); if (bpChart) bpChart.destroy(); if (filtered.length === 0) return; const sorted = [...filtered].sort((a, b) => a.timestamp - b.timestamp); bpChart = new Chart(ctx, { type: 'line', data: { labels: sorted.map(r => r.date.split('年')[1] || r.date), datasets: [{ label: '收縮壓', data: sorted.map(r => r.sys), borderColor: '#A2D2FF', tension: 0.3 }, { label: '舒張壓', data: sorted.map(r => r.dia), borderColor: '#FFC2C7', tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } }); }
+function calculateSummary(filtered) {
+    const avgText = document.getElementById('avg-text');
+    if (filtered.length === 0) { avgText.innerText = "尚無資料"; document.getElementById('health-tip').style.display='none'; return; }
+    const avgSys = Math.round(filtered.reduce((acc, r) => acc + r.sys, 0) / filtered.length);
+    const avgDia = Math.round(filtered.reduce((acc, r) => acc + r.dia, 0) / filtered.length);
+    avgText.innerText = `平均值：${avgSys}/${avgDia} mmHg`;
+    const tipBox = document.getElementById('health-tip');
+    tipBox.style.display = 'block';
+    if (avgSys < 120 && avgDia < 80) { tipBox.className='health-tip tip-normal'; tipBox.querySelector('.tip-title').innerText='✅ 健康達標'; tipBox.querySelector('.tip-content').innerText='數值很漂亮，請繼續維持。'; }
+    else { tipBox.className='health-tip tip-danger'; tipBox.querySelector('.tip-title').innerText='⚠️ 注意波動'; tipBox.querySelector('.tip-content').innerText='請留意飲食與作息。'; }
+    document.getElementById('pdf-avg-main').innerText = avgText.innerText;
 }
