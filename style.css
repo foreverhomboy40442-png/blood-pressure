@@ -8,9 +8,8 @@ body { margin: 0; font-family: -apple-system, "Microsoft JhengHei", sans-serif; 
 .user-bar h1 { margin: 0; font-size: 1.5rem; flex-shrink: 0; }
 #user-info { font-size:0.85rem; color:#666; background:#f0f0f0; padding:8px 16px; border-radius:20px; font-weight:700; cursor:pointer; margin-left: auto; }
 
-/* 優化點 1：卡片框框稍微加大 (高度與內距微調) */
 .card-grid { display: flex; gap: 12px; margin-bottom: 20px; width: 100%; }
-.log-card { flex: 1; height: 115px; border-radius: 28px; padding: 18px 8px; text-align: center; background: #f9f9f9; cursor: pointer; border: 2px solid transparent; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: transform 0.2s; }
+.log-card { flex: 1; height: 115px; border-radius: 28px; padding: 18px 8px; text-align: center; background: #f9f9f9; cursor: pointer; border: 2px solid transparent; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 .card-inline-content { display: flex; align-items: center; justify-content: center; gap: 10px; }
 .icon-large { font-size: 2rem; } 
 .text-large { font-size: 1.3rem; margin: 0; font-weight: 800; } 
@@ -19,21 +18,19 @@ body { margin: 0; font-family: -apple-system, "Microsoft JhengHei", sans-serif; 
 .log-card.evening-done { background: var(--evening-peach); }
 .log-card.completed .status-label { color: var(--green-done); font-weight: 800; }
 
-/* 篩選按鈕 */
 .filter-section { width: 100%; margin: 10px 0 20px; }
 .filter-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; width: 100%; }
 .filter-buttons button { padding: 12px 0; border-radius: 12px; border: 1px solid #eee; background: #f8f9fa; font-weight: 800; font-size: 0.95rem; cursor: pointer; }
 .filter-buttons button.active { background: var(--blue-soft); color: white; border-color: var(--blue-soft); }
 
-/* 優化點 2：自訂查詢日期小一點、同一行 */
-.custom-panel-fancy { display: none; margin-top: 15px; padding: 20px; background: #fff; border-radius: 25px; border: 1.5px solid #f0f0f0; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+/* 自訂面板與 Z-index 修正 */
+.custom-panel-fancy { display: none; position: relative; margin-top: 15px; padding: 20px; background: #fff; border-radius: 25px; border: 1.5px solid #f0f0f0; box-shadow: 0 10px 30px rgba(0,0,0,0.05); z-index: 10; }
 .panel-title { font-size: 0.9rem; font-weight: 800; color: #555; margin-bottom: 12px; text-align: center; }
 .date-input-row-single { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 15px; }
-.compact-date-input { width: 140px; height: 42px; border-radius: 10px; border: 1.5px solid #eee; font-size: 0.9rem; font-weight: 700; text-align: center; background: #fafafa; -webkit-appearance: none; }
+.compact-date-input { width: 140px; height: 42px; border-radius: 10px; border: 1.5px solid #eee; font-size: 0.9rem; font-weight: 700; text-align: center; background: #fafafa; }
 .date-arrow-single { font-size: 0.9rem; color: #ccc; font-weight: bold; }
 .btn-apply-fancy { width: 100%; background: var(--blue-dark); color: white; border: none; padding: 14px; border-radius: 50px; font-weight: 800; }
 
-/* 數據摘要 */
 .summary-card { background: #fff; padding: 25px; border-radius: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; margin-bottom: 15px; }
 .summary-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f8f8f8; padding-bottom: 10px; margin-bottom: 15px; }
 .header-date { font-size: 0.8rem; color: #aaa; font-weight: 700; }
@@ -42,11 +39,11 @@ body { margin: 0; font-family: -apple-system, "Microsoft JhengHei", sans-serif; 
 .tip-title { font-weight: 800; color: #D97706; margin-bottom: 8px; font-size: 1rem; }
 .tip-content { font-size: 0.95rem; color: #92400E; line-height: 1.6; }
 
-/* 彈窗樣式 */
 .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.4); backdrop-filter: blur(10px); z-index: 2000; align-items: center; justify-content: center; }
 .modal-card { background: #fff; width: 90%; max-width: 400px; padding: 40px 30px; border-radius: 40px; box-shadow: 0 20px 50px rgba(0,0,0,0.15); text-align: center; }
 .modal-icon { font-size: 4rem; margin-bottom: 15px; }
 .large-title { font-size: 1.8rem; font-weight: 900; margin-bottom: 10px; }
+.warm-text { color: #888; font-size: 1.1rem; line-height: 1.5; margin-bottom: 25px; }
 .giant-input { width: 100%; padding: 20px; border-radius: 20px; border: 2.5px solid #eee; font-size: 1.5rem; text-align: center; margin-bottom: 25px; outline: none; background: #fafafa; }
 .btn-warm-save { width: 100%; background: linear-gradient(135deg, var(--blue-soft), var(--blue-dark)); color: white; border: none; padding: 20px; border-radius: 50px; font-size: 1.3rem; font-weight: 800; cursor: pointer; }
 

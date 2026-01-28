@@ -24,18 +24,18 @@
     <main class="container" id="main-report">
         <div class="card-grid no-pdf">
             <div id="morning-card" class="log-card morning" onclick="openModal('morning')">
-                <div class="card-inline-content">
+                <div class="card-inline-content" style="pointer-events: none;">
                     <span class="icon-large">☀️</span>
                     <h2 class="text-large">早晨紀錄</h2>
                 </div>
-                <p id="morning-status" class="status-label">尚未填寫</p>
+                <p id="morning-status" class="status-label" style="pointer-events: none;">尚未填寫</p>
             </div>
             <div id="evening-card" class="log-card evening" onclick="openModal('evening')">
-                <div class="card-inline-content">
+                <div class="card-inline-content" style="pointer-events: none;">
                     <span class="icon-large">🌙</span>
                     <h2 class="text-large">晚間紀錄</h2>
                 </div>
-                <p id="evening-status" class="status-label">尚未填寫</p>
+                <p id="evening-status" class="status-label" style="pointer-events: none;">尚未填寫</p>
             </div>
         </div>
 
@@ -95,7 +95,7 @@
 
     <div id="log-modal" class="modal-overlay">
         <div class="modal-card">
-            <h2>紀錄數據</h2>
+            <h2 id="modal-title">紀錄數據</h2>
             <div class="input-container">
                 <div class="input-block">
                     <label>收縮壓 (SYS)</label>
@@ -117,12 +117,15 @@
         </div>
     </div>
 
-    <div id="pdf-wrapper" style="position: absolute; left: -9999px; top: 0; width: 800px; background: white;">
-        <div id="pdf-template" style="padding: 40px;">
-            <h1 style="font-size: 32px; border-bottom: 2px solid #333; padding-bottom: 10px;">血壓健康評估報表</h1>
-            <p id="pdf-user-info" style="font-size: 18px; margin: 15px 0;"></p>
+    <div id="pdf-wrapper" style="position: fixed; left: -9999px; top: 0; width: 800px; background: white; padding: 20px; border: 1px solid #eee;">
+        <div id="pdf-template">
+            <h1 style="font-size: 32px; border-bottom: 3px solid #333; padding-bottom: 10px;">血壓健康評估報表</h1>
+            <div style="font-size: 18px; margin: 15px 0;">
+                <p id="pdf-user-info"></p>
+                <p id="pdf-date-range"></p>
+            </div>
             <div id="pdf-avg-summary" style="font-size: 22px; font-weight: bold; color: #d63031; padding: 20px; background: #f9f9f9; border-radius: 10px; margin: 20px 0;"></div>
-            <table style="width: 100%; border-collapse: collapse;">
+            <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
                 <thead><tr style="background:#eee;">
                     <th style="border:1px solid #ddd; padding:12px;">日期</th>
                     <th style="border:1px solid #ddd; padding:12px;">時段</th>

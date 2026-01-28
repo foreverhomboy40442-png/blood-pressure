@@ -76,11 +76,16 @@ async function syncFromCloud() {
     refreshDisplay();
 }
 
+// 修正：點擊顯示邏輯
 function handleRangeClick(range) {
     currentRange = range;
     const panel = document.getElementById('custom-date-panel');
+    
+    // 更新按鈕選中樣式
     document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active'));
     document.getElementById(`btn-${range}`).classList.add('active');
+    
+    // 面板切換
     if (range === 'custom') {
         panel.style.display = 'block';
     } else {
@@ -143,7 +148,8 @@ function filterRecordsByRange(records) {
 
 async function exportPDF() {
     const btn = document.querySelector('.btn-pdf-large'); btn.innerText = "⏳ 製作中...";
-    document.getElementById('pdf-user-info').innerText = `專屬健康 ID：${userId} | 報表日期：${new Date().toLocaleDateString()}`;
+    document.getElementById('pdf-user-info').innerText = `專屬健康 ID：${userId}`;
+    document.getElementById('pdf-date-range').innerText = `查詢區間：${document.getElementById('card-date-display').innerText}`;
     document.getElementById('pdf-avg-summary').innerText = `期間平均血壓：${document.getElementById('avg-text').innerText}`;
     const tableBody = document.getElementById('pdf-table-body');
     tableBody.innerHTML = currentFilteredData.sort((a, b) => b.timestamp - a.timestamp).map(r => `<tr><td style="border:1px solid #ddd; padding:12px;">${r.date}</td><td style="border:1px solid #ddd; padding:12px; text-align:center;">${r.type === 'morning' ? '早晨' : '晚間'}</td><td style="border:1px solid #ddd; padding:12px; text-align:center; font-weight:bold;">${r.sys} / ${r.dia}</td><td style="border:1px solid #ddd; padding:12px; text-align:center;">${r.pulse}</td></tr>`).join('');
@@ -153,7 +159,9 @@ async function exportPDF() {
 
 function shareToLine() {
     const avg = document.getElementById('avg-text').innerText;
-    const msg = `【健康日誌回報 🧡】\n👤 帳號：${userId}\n📈 平均血壓：${avg}\n📊 統計：${currentFilteredData.length} 筆\n紀錄今天，守護明天！`;
+    const dateRange = document.getElementById('card-date-display').innerText;
+    const suggestion = document.getElementById('tip-content').innerText;
+    const msg = `【心跳守護｜雲端血壓日誌 🧡】\n👤 帳號名稱：${userId}\n📅 紀錄日期：${dateRange}\n📈 平均血壓：${avg}\n💡 溫馨建議：${suggestion}\n\n紀錄今天，守護明天。讓我們一起維持健康好習慣！`;
     window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank');
 }
 
