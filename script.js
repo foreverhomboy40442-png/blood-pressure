@@ -76,16 +76,11 @@ async function syncFromCloud() {
     refreshDisplay();
 }
 
-// 修正：點擊顯示邏輯
 function handleRangeClick(range) {
     currentRange = range;
     const panel = document.getElementById('custom-date-panel');
-    
-    // 更新按鈕選中樣式
     document.querySelectorAll('.filter-buttons button').forEach(b => b.classList.remove('active'));
     document.getElementById(`btn-${range}`).classList.add('active');
-    
-    // 面板切換
     if (range === 'custom') {
         panel.style.display = 'block';
     } else {
@@ -146,15 +141,35 @@ function filterRecordsByRange(records) {
     return { filtered, start: s.toLocaleDateString('zh-TW'), end: e.toLocaleDateString('zh-TW') };
 }
 
+// PDF 優化：對齊範例附圖欄位
 async function exportPDF() {
     const btn = document.querySelector('.btn-pdf-large'); btn.innerText = "⏳ 製作中...";
-    document.getElementById('pdf-user-info').innerText = `專屬健康 ID：${userId}`;
-    document.getElementById('pdf-date-range').innerText = `查詢區間：${document.getElementById('card-date-display').innerText}`;
-    document.getElementById('pdf-avg-summary').innerText = `期間平均血壓：${document.getElementById('avg-text').innerText}`;
+    
+    document.getElementById('pdf-range-display').innerText = document.getElementById('card-date-display').innerText;
+    document.getElementById('pdf-avg-text').innerText = document.getElementById('avg-text').innerText;
+    
     const tableBody = document.getElementById('pdf-table-body');
-    tableBody.innerHTML = currentFilteredData.sort((a, b) => b.timestamp - a.timestamp).map(r => `<tr><td style="border:1px solid #ddd; padding:12px;">${r.date}</td><td style="border:1px solid #ddd; padding:12px; text-align:center;">${r.type === 'morning' ? '早晨' : '晚間'}</td><td style="border:1px solid #ddd; padding:12px; text-align:center; font-weight:bold;">${r.sys} / ${r.dia}</td><td style="border:1px solid #ddd; padding:12px; text-align:center;">${r.pulse}</td></tr>`).join('');
+    if (currentFilteredData.length === 0) {
+        tableBody.innerHTML = '<tr><td colspan="4" style="padding:30px; border:1px solid #000;">尚無紀錄</td></tr>';
+    } else {
+        // 精確對應：日期、時段、收縮壓/舒張壓、心率
+        tableBody.innerHTML = currentFilteredData.sort((a, b) => b.timestamp - a.timestamp).map(r => `
+            <tr style="border-bottom: 1.5px solid #000;">
+                <td style="border: 1.5px solid #000; padding: 15px;">${r.date}</td>
+                <td style="border: 1.5px solid #000; padding: 15px;">${r.type === 'morning' ? '早晨' : '晚間'}</td>
+                <td style="border: 1.5px solid #000; padding: 15px; font-weight: bold; font-size: 20px;">${r.sys} / ${r.dia}</td>
+                <td style="border: 1.5px solid #000; padding: 15px;">${r.pulse}</td>
+            </tr>`).join('');
+    }
+    
     const element = document.getElementById('pdf-template');
-    try { await html2pdf().from(element).save(`健康報告_${userId}.pdf`); } finally { btn.innerText = "📄 產出 PDF 報表"; }
+    const opt = { 
+        margin: 10, filename: `血壓記錄報表_${userId}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
+    try { await html2pdf().set(opt).from(element).save(); } finally { btn.innerText = "📄 產出 PDF 報表"; }
 }
 
 function shareToLine() {

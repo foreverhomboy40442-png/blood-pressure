@@ -15,9 +15,9 @@
             <div id="user-info" onclick="resetUser()">👤 載入中...</div>
         </div>
         <div class="date-stepper no-pdf">
-            <button onclick="changeDate(-1)">❮</button>
+            <button onclick="changeDate(-1)" class="btn-arrow-large">❮</button>
             <div id="target-date-display" class="today-tag">載入中...</div>
-            <button onclick="changeDate(1)">❯</button>
+            <button onclick="changeDate(1)" class="btn-arrow-large">❯</button>
         </div>
     </header>
 
@@ -46,7 +46,6 @@
                 <button onclick="handleRangeClick('month')" id="btn-month">近一個月</button>
                 <button onclick="handleRangeClick('custom')" id="btn-custom">自訂查詢</button>
             </div>
-            
             <div id="custom-date-panel" class="custom-panel-fancy">
                 <div class="panel-title">🗓️ 請選擇查詢區間</div>
                 <div class="date-input-row-single">
@@ -54,7 +53,7 @@
                     <div class="date-arrow-single">➜</div>
                     <input type="date" id="end-date" class="compact-date-input">
                 </div>
-                <button class="btn-apply-fancy" onclick="applyCustomRange()">確認查詢</button>
+                <button class="btn-apply-fancy large-btn-text" onclick="applyCustomRange()">確認查詢</button>
             </div>
         </section>
 
@@ -99,15 +98,15 @@
             <div class="input-container">
                 <div class="input-block">
                     <label>收縮壓 (SYS)</label>
-                    <input type="number" id="sys" inputmode="numeric" placeholder="120">
+                    <input type="number" id="sys" inputmode="numeric" placeholder="請輸入數值">
                 </div>
                 <div class="input-block">
                     <label>舒張壓 (DIA)</label>
-                    <input type="number" id="dia" inputmode="numeric" placeholder="80">
+                    <input type="number" id="dia" inputmode="numeric" placeholder="請輸入數值">
                 </div>
                 <div class="input-block">
                     <label>心率 (PUL)</label>
-                    <input type="number" id="pulse" inputmode="numeric" placeholder="72">
+                    <input type="number" id="pulse" inputmode="numeric" placeholder="請輸入數值">
                 </div>
             </div>
             <div class="modal-footer">
@@ -117,22 +116,27 @@
         </div>
     </div>
 
-    <div id="pdf-wrapper" style="position: fixed; left: -9999px; top: 0; width: 800px; background: white; padding: 20px; border: 1px solid #eee;">
-        <div id="pdf-template">
-            <h1 style="font-size: 32px; border-bottom: 3px solid #333; padding-bottom: 10px;">血壓健康評估報表</h1>
-            <div style="font-size: 18px; margin: 15px 0;">
-                <p id="pdf-user-info"></p>
-                <p id="pdf-date-range"></p>
+    <div style="overflow: hidden; height: 0; width: 0; position: absolute;">
+        <div id="pdf-template" style="width: 750px; background: white; padding: 50px; font-family: 'Microsoft JhengHei', sans-serif;">
+            <h1 style="font-size: 34px; margin-bottom: 20px; color: #000; font-weight: bold; border-bottom: 4px solid #000; padding-bottom: 15px;">血壓記錄報表</h1>
+            
+            <p style="font-size: 20px; margin-bottom: 25px; font-weight: bold;">報告區間：<span id="pdf-range-display"></span></p>
+            
+            <div style="background: #f8f9fa; border: 1.5px solid #dee2e6; border-radius: 12px; padding: 25px; margin-bottom: 35px;">
+                <div style="font-size: 22px; font-weight: bold; margin-bottom: 5px;">📋 數據摘要</div>
+                <div id="pdf-avg-text" style="font-size: 18px; color: #333;"></div>
             </div>
-            <div id="pdf-avg-summary" style="font-size: 22px; font-weight: bold; color: #d63031; padding: 20px; background: #f9f9f9; border-radius: 10px; margin: 20px 0;"></div>
-            <table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
-                <thead><tr style="background:#eee;">
-                    <th style="border:1px solid #ddd; padding:12px;">日期</th>
-                    <th style="border:1px solid #ddd; padding:12px;">時段</th>
-                    <th style="border:1px solid #ddd; padding:12px;">血壓 (SYS/DIA)</th>
-                    <th style="border:1px solid #ddd; padding:12px;">心率</th>
-                </tr></thead>
-                <tbody id="pdf-table-body"></tbody>
+            
+            <table style="width: 100%; border-collapse: collapse; border: 1.5px solid #000; font-size: 18px;">
+                <thead>
+                    <tr style="background: #f1f1f1; border-bottom: 1.5px solid #000;">
+                        <th style="border: 1.5px solid #000; padding: 15px;">日期</th>
+                        <th style="border: 1.5px solid #000; padding: 15px;">時段</th>
+                        <th style="border: 1.5px solid #000; padding: 15px;">收縮壓 / 舒張壓</th>
+                        <th style="border: 1.5px solid #000; padding: 15px;">心率</th>
+                    </tr>
+                </thead>
+                <tbody id="pdf-table-body" style="text-align: center;"></tbody>
             </table>
         </div>
     </div>

@@ -8,6 +8,10 @@ body { margin: 0; font-family: -apple-system, "Microsoft JhengHei", sans-serif; 
 .user-bar h1 { margin: 0; font-size: 1.5rem; flex-shrink: 0; }
 #user-info { font-size:0.85rem; color:#666; background:#f0f0f0; padding:8px 16px; border-radius:20px; font-weight:700; cursor:pointer; margin-left: auto; }
 
+/* 優化：箭頭加大 */
+.btn-arrow-large { background: #f0f0f0; border: none; width: 48px; height: 48px; border-radius: 50%; font-size: 1.6rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+
+/* 卡片尺寸優化 */
 .card-grid { display: flex; gap: 12px; margin-bottom: 20px; width: 100%; }
 .log-card { flex: 1; height: 115px; border-radius: 28px; padding: 18px 8px; text-align: center; background: #f9f9f9; cursor: pointer; border: 2px solid transparent; display: flex; flex-direction: column; justify-content: center; align-items: center; }
 .card-inline-content { display: flex; align-items: center; justify-content: center; gap: 10px; }
@@ -16,20 +20,21 @@ body { margin: 0; font-family: -apple-system, "Microsoft JhengHei", sans-serif; 
 .status-label { font-size: 0.85rem; margin-top: 6px; color: #999; }
 .log-card.morning-done { background: var(--morning-mint); }
 .log-card.evening-done { background: var(--evening-peach); }
-.log-card.completed .status-label { color: var(--green-done); font-weight: 800; }
 
 .filter-section { width: 100%; margin: 10px 0 20px; }
 .filter-buttons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; width: 100%; }
 .filter-buttons button { padding: 12px 0; border-radius: 12px; border: 1px solid #eee; background: #f8f9fa; font-weight: 800; font-size: 0.95rem; cursor: pointer; }
 .filter-buttons button.active { background: var(--blue-soft); color: white; border-color: var(--blue-soft); }
 
-/* 自訂面板與 Z-index 修正 */
-.custom-panel-fancy { display: none; position: relative; margin-top: 15px; padding: 20px; background: #fff; border-radius: 25px; border: 1.5px solid #f0f0f0; box-shadow: 0 10px 30px rgba(0,0,0,0.05); z-index: 10; }
+.custom-panel-fancy { display: none; margin-top: 15px; padding: 20px; background: #fff; border-radius: 25px; border: 1.5px solid #f0f0f0; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
 .panel-title { font-size: 0.9rem; font-weight: 800; color: #555; margin-bottom: 12px; text-align: center; }
 .date-input-row-single { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 15px; }
 .compact-date-input { width: 140px; height: 42px; border-radius: 10px; border: 1.5px solid #eee; font-size: 0.9rem; font-weight: 700; text-align: center; background: #fafafa; }
 .date-arrow-single { font-size: 0.9rem; color: #ccc; font-weight: bold; }
-.btn-apply-fancy { width: 100%; background: var(--blue-dark); color: white; border: none; padding: 14px; border-radius: 50px; font-weight: 800; }
+
+/* 優化：確認查詢按鈕字體加大 */
+.btn-apply-fancy { width: 100%; background: var(--blue-dark); color: white; border: none; padding: 14px; border-radius: 50px; font-weight: 800; cursor: pointer; }
+.large-btn-text { font-size: 1.35rem !important; }
 
 .summary-card { background: #fff; padding: 25px; border-radius: 35px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); border: 1px solid #f0f0f0; margin-bottom: 15px; }
 .summary-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #f8f8f8; padding-bottom: 10px; margin-bottom: 15px; }
