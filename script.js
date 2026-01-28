@@ -97,7 +97,7 @@ function refreshDisplay() {
     const rangeText = (currentRange === 'today') ? `${start}` : `${start} ~ ${end}`;
     document.getElementById('card-date-display').innerText = rangeText;
     
-    // 優化：移除紀錄中的括號 (早/晚) 文字
+    // 修復需求：移除紀錄清單中的括號 (早/晚)
     document.getElementById('history-list').innerHTML = filtered.slice(0, 5).map(r => `
         <div class="history-item">
             <div style="font-size:0.85rem;color:#999">${r.date}</div>
@@ -129,7 +129,7 @@ async function exportPDF() {
     const opt = { 
         margin: [10, 5, 10, 5], 
         filename: `血壓評估報告_${new Date().toLocaleDateString()}.pdf`, 
-        image: { type: 'jpeg', quality: 0.98 }, 
+        image: { type: 'jpeg', quality: 1 }, 
         html2canvas: { scale: 2, useCORS: true, scrollY: 0, windowWidth: 800 }, 
         jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
         pagebreak: { mode: ['css', 'legacy'] }

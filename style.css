@@ -17,20 +17,26 @@ body { margin: 0; font-family: -apple-system, sans-serif; background: #FFF; disp
 .icon { font-size: 2.2rem; display: block; opacity: 0.4; }
 .log-card.completed .icon { opacity: 1; }
 
-/* 優化篩選按鈕：字體放大並維持同一行 */
-.filter-buttons { display: flex; gap: 4px; margin-bottom: 10px; width: 100%; overflow: hidden; }
+/* 優化篩選按鈕：字體放大加粗、單行、手機寬度適配 */
+.filter-buttons { 
+    display: flex; 
+    gap: 3px; /* 縮小間隙 */
+    margin-bottom: 10px; 
+    width: 100%; 
+}
 .filter-buttons button { 
     flex: 1 1 0; 
-    padding: 12px 2px; 
+    padding: 12px 0; /* 移除左右邊距 */
     border-radius: 12px; 
     border: 1px solid #eee; 
     background: #f8f9fa; 
-    font-weight: 700; 
-    font-size: 0.95rem; /* 字體稍微放大 */
+    font-weight: 900; /* 強制超粗體 */
+    font-size: 1.05rem; /* 顯著放大字體 */
     cursor: pointer; 
-    white-space: nowrap; /* 確保文字不換行 */
+    white-space: nowrap; 
+    letter-spacing: -1px; /* 縮緊字距確保手機單行顯示 */
 }
-.filter-buttons button.active { background: var(--blue-soft); color: white; }
+.filter-buttons button.active { background: var(--blue-soft); color: white; border-color: var(--blue-soft); }
 
 .custom-date-panel { display: none; background: #fff; padding: 20px; border-radius: 24px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; border: 1px solid #eee; }
 .date-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 8px; margin-bottom: 15px; }
