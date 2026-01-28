@@ -27,23 +27,17 @@ function updateTargetDateDisplay() {
     document.getElementById('target-date-display').innerText = dateStr;
 }
 
-// 數據儲存邏輯：支援每日早晚去重
 function saveData() {
     const sys = parseInt(document.getElementById('sys').value, 10);
     const dia = parseInt(document.getElementById('dia').value, 10);
     const pulse = parseInt(document.getElementById('pulse').value, 10);
-    
     if (isNaN(sys) || isNaN(dia) || isNaN(pulse)) {
         alert("請輸入正確數字");
         return;
     }
-    
     const dateKey = currentTargetDate.toLocaleDateString('zh-TW');
     let records = JSON.parse(localStorage.getItem('bp_records') || '[]');
-
-    // 去重處理：移除同一天同一類型的舊紀錄
     records = records.filter(r => !(r.date === dateKey && r.type === currentType));
-
     const newRecord = {
         id: Date.now(),
         timestamp: currentTargetDate.getTime(),
@@ -52,10 +46,8 @@ function saveData() {
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         sys, dia, pulse
     };
-
     records.unshift(newRecord);
     records.sort((a, b) => b.timestamp - a.timestamp);
-    
     localStorage.setItem('bp_records', JSON.stringify(records));
     closeModal();
     initApp();
@@ -66,23 +58,19 @@ function calculateSummary(filtered) {
     const subAvgText = document.getElementById('sub-avg-text');
     const tipBox = document.getElementById('health-tip');
     const validData = filtered.filter(r => !isNaN(parseInt(r.sys, 10)));
-    
     if (validData.length === 0) {
         avgText.innerText = "尚無資料";
         subAvgText.innerText = "";
         tipBox.style.display = 'none';
         return;
     }
-
     const count = validData.length;
     const avgSys = Math.round(validData.reduce((acc, r) => acc + parseInt(r.sys, 10), 0) / count);
     const avgDia = Math.round(validData.reduce((acc, r) => acc + parseInt(r.dia, 10), 0) / count);
     const avgPulse = Math.round(validData.reduce((acc, r) => acc + parseInt(r.pulse, 10), 0) / count);
-
     const label = (currentRange === 'today') ? "今日平均" : (currentRange === 'week' ? "近一週平均" : (currentRange === 'month' ? "近一個月平均" : "累計平均"));
     avgText.innerText = `${label}：${avgSys}/${avgDia} mmHg`;
     subAvgText.innerHTML = `統計筆數：${count} 筆 | 平均心率：${avgPulse} bpm`;
-
     const advice = getAdvice(avgSys, avgDia);
     tipBox.querySelector('.tip-title').innerText = advice.title;
     tipBox.querySelector('.tip-content').innerText = advice.content;
@@ -96,8 +84,6 @@ function refreshDisplay() {
     currentFilteredData = filtered;
     const rangeText = (currentRange === 'today') ? `${start}` : `${start} ~ ${end}`;
     document.getElementById('card-date-display').innerText = rangeText;
-    
-    // 歷史紀錄：移除括號文字
     document.getElementById('history-list').innerHTML = filtered.slice(0, 5).map(r => `
         <div class="history-item">
             <div style="font-size:0.85rem;color:#999">${r.date}</div>
@@ -106,12 +92,10 @@ function refreshDisplay() {
                 <span>💓 ${r.pulse}</span>
             </div>
         </div>`).join('');
-    
     updateChart(filtered);
     calculateSummary(filtered);
 }
 
-// PDF 產出優化：解決電腦下載跑版
 async function exportPDF() {
     const btn = document.querySelector('.btn-pdf-large');
     if (typeof html2pdf === 'undefined') return;
@@ -125,7 +109,6 @@ async function exportPDF() {
             <td style="border: 1px solid #000; padding: 12px; text-align: center; font-weight: bold; font-size:24px;">${r.sys} / ${r.dia}</td>
             <td style="border: 1px solid #000; padding: 12px; text-align: center;">${r.pulse}</td>
         </tr>`).join('');
-
     const element = document.getElementById('pdf-template');
     const opt = { 
         margin: [10, 5], 
@@ -167,31 +150,17 @@ function checkTodayStatus() {
     if (mRec) { mCard.classList.add('completed', 'morning-done'); document.getElementById('morning-status').innerText = `已填: ${mRec.sys}/${mRec.dia}`; } else { mCard.classList.remove('completed', 'morning-done'); document.getElementById('morning-status').innerText = '尚未填寫'; }
     if (eRec) { eCard.classList.add('completed', 'evening-done'); document.getElementById('evening-status').innerText = `已填: ${eRec.sys}/${eRec.dia}`; } else { eCard.classList.remove('completed', 'evening-done'); document.getElementById('evening-status').innerText = '尚未填寫'; }
 }
-
 function shareToLine() { 
     const tipTitle = document.querySelector('.tip-title').innerText;
     const tipContent = document.querySelector('.tip-content').innerText;
     const msg = `【心跳守護】血壓回報\n📊 查詢日期：${document.getElementById('card-date-display').innerText}\n📈 ${document.getElementById('avg-text').innerText}\n💡 建議：${tipTitle} - ${tipContent}\n\n隨時追蹤，守護健康！`; 
     window.open(`https://line.me/R/msg/text/?${encodeURIComponent(msg)}`, '_blank'); 
 }
-
 function updateChart(filtered) { 
     const ctx = document.getElementById('bpChart').getContext('2d'); if (bpChart) bpChart.destroy(); if (filtered.length === 0) return; 
     const sorted = [...filtered].sort((a, b) => a.timestamp - b.timestamp); 
-    bpChart = new Chart(ctx, { 
-        type: 'line', 
-        data: { 
-            labels: sorted.map(r => r.date.slice(5)), 
-            datasets: [
-                { label: '收縮壓', data: sorted.map(r => r.sys), borderColor: '#A2D2FF', tension: 0.3 }, 
-                { label: '舒張壓', data: sorted.map(r => r.dia), borderColor: '#FFC2C7', tension: 0.3 }
-            ] 
-        }, 
-        options: { responsive: true, maintainAspectRatio: false } 
-    }); 
+    bpChart = new Chart(ctx, { type: 'line', data: { labels: sorted.map(r => r.date.slice(5)), datasets: [{ label: '收縮壓', data: sorted.map(r => r.sys), borderColor: '#A2D2FF', tension: 0.3 }, { label: '舒張壓', data: sorted.map(r => r.dia), borderColor: '#FFC2C7', tension: 0.3 }] }, options: { responsive: true, maintainAspectRatio: false } }); 
 }
-
-// 判定邏輯：五組白話文建議
 function getAdvice(sys, dia) { 
     if (sys < 90 || dia < 60) return { title: "📉 數值偏低", content: "請注意是否頭暈，建議補充水分或諮詢醫師。", class: "tip-danger" };
     if (sys < 120 && dia < 80) return { title: "✅ 健康達標", content: "數值很漂亮！請繼續維持規律作息與運動。", class: "tip-normal" };
