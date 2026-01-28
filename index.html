@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <title>心跳守護：血壓日誌</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -12,7 +13,7 @@
 <body>
 
     <header>
-        <div id="current-date-display" class="today-tag">2026年1月28日</div>
+        <div id="current-date-display" class="today-tag"></div>
         <h1>心跳守護</h1>
         <p>您的專屬健康日誌</p>
     </header>
@@ -35,7 +36,7 @@
             <div class="filter-buttons">
                 <button onclick="setRange('week')" id="btn-week" class="active">本週</button>
                 <button onclick="setRange('month')" id="btn-month">本月</button>
-                <button onclick="toggleCustomRange()" id="btn-custom">自訂</button>
+                <button onclick="toggleCustomRange()" id="btn-custom">自訂區間</button>
             </div>
             <div id="custom-date-picker" class="custom-date-picker">
                 <div class="date-inputs">
@@ -47,9 +48,9 @@
 
         <section class="analysis-section">
             <div class="summary-card">
-                <h3 id="range-title">📊 本週數據摘要</h3>
-                <p id="range-date-display" class="range-date-text">2026/01/21 - 2026/01/28</p>
-                <p id="avg-text">尚無數據</p>
+                <h3 id="range-title">📊 數據摘要</h3>
+                <p id="range-date-display" class="range-date-text"></p>
+                <p id="avg-text" class="avg-main-text">尚無數據</p>
                 <div id="health-tip" class="health-tip"></div>
             </div>
 
@@ -58,8 +59,8 @@
             </div>
             
             <div class="action-buttons no-print">
-                <button class="btn-pdf" onclick="exportPDF()">📄 產出 PDF 報表</button>
-                <button class="btn-share" onclick="shareToLine()">📤 LINE 分享文字</button>
+                <button class="btn-pdf" onclick="exportPDF()">📄 產出 PDF</button>
+                <button class="btn-share" onclick="shareToLine()">📤 LINE 分享</button>
             </div>
         </section>
 
