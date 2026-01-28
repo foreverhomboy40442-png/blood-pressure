@@ -14,7 +14,6 @@ function initApp() {
     refreshDisplay();
 }
 
-// 1. 健康建議：標題與內文樣式分離
 function getAdvice(sys, dia) {
     if (sys < 90 || dia < 60) return { title: "🚨 血壓目前偏低", content: "請注意是否有頭暈、虛弱現象，建議補充水分，並視情況諮詢醫師。", class: "tip-danger" };
     if (sys < 120 && dia < 80) return { title: "✅ 血壓非常正常", content: "目前數值很理想，代表您的身體狀況維持得很好，請繼續保持！", class: "tip-normal" };
@@ -26,11 +25,8 @@ function getAdvice(sys, dia) {
 function refreshDisplay() {
     const all = JSON.parse(localStorage.getItem('bp_records') || '[]');
     const { filtered, start, end } = filterRecordsByRange(all);
-    
-    // 2. 日期顯示在按鈕下方
     const infoBar = document.getElementById('range-info-bar');
     infoBar.innerText = (currentRange === 'today') ? `日期：${start}` : `區間：${start} ~ ${end}`;
-    
     renderHistory(filtered);
     updateChart(filtered);
     calculateSummary(filtered);
@@ -41,23 +37,13 @@ function calculateSummary(filtered) {
     const tipBox = document.getElementById('health-tip');
     const tipTitle = tipBox.querySelector('.tip-title');
     const tipContent = tipBox.querySelector('.tip-content');
-    
-    if (filtered.length === 0) {
-        avgText.innerText = "目前尚無資料";
-        tipBox.style.display = 'none';
-        return;
-    }
-
+    if (filtered.length === 0) { avgText.innerText = "目前尚無資料"; tipBox.style.display = 'none'; return; }
     const avgSys = Math.round(filtered.reduce((acc, r) => acc + parseInt(r.sys), 0) / filtered.length);
     const avgDia = Math.round(filtered.reduce((acc, r) => acc + parseInt(r.dia), 0) / filtered.length);
-    
     avgText.innerText = `平均值：${avgSys}/${avgDia} mmHg`;
-    
     const advice = getAdvice(avgSys, avgDia);
-    tipTitle.innerText = advice.title;
-    tipContent.innerText = advice.content;
-    tipBox.className = `health-tip ${advice.class}`;
-    tipBox.style.display = 'block';
+    tipTitle.innerText = advice.title; tipContent.innerText = advice.content;
+    tipBox.className = `health-tip ${advice.class}`; tipBox.style.display = 'block';
 }
 
 function filterRecordsByRange(records) {
@@ -75,34 +61,19 @@ function filterRecordsByRange(records) {
     return { filtered, start: s.toLocaleDateString('zh-TW'), end: e.toLocaleDateString('zh-TW') };
 }
 
-// 3. 檢查卡片完成狀態與顏色切換
 function checkTodayStatus() {
     const today = new Date().toLocaleDateString('zh-TW');
     const records = JSON.parse(localStorage.getItem('bp_records') || '[]');
-    
     const mDone = records.some(r => r.date === today && r.type === 'morning');
     const eDone = records.some(r => r.date === today && r.type === 'evening');
-
     const mCard = document.getElementById('morning-card');
     const eCard = document.getElementById('evening-card');
     const mStatus = document.getElementById('morning-status');
     const eStatus = document.getElementById('evening-status');
-
-    if (mDone) {
-        mCard.classList.add('completed', 'morning-done');
-        mStatus.innerText = '今日已完成';
-    } else {
-        mCard.classList.remove('completed', 'morning-done');
-        mStatus.innerText = '今日尚未填寫';
-    }
-
-    if (eDone) {
-        eCard.classList.add('completed', 'evening-done');
-        eStatus.innerText = '今日已完成';
-    } else {
-        eCard.classList.remove('completed', 'evening-done');
-        eStatus.innerText = '今日尚未填寫';
-    }
+    if (mDone) { mCard.classList.add('completed', 'morning-done'); mStatus.innerText = '今日已完成'; } 
+    else { mCard.classList.remove('completed', 'morning-done'); mStatus.innerText = '今日尚未填寫'; }
+    if (eDone) { eCard.classList.add('completed', 'evening-done'); eStatus.innerText = '今日已完成'; } 
+    else { eCard.classList.remove('completed', 'evening-done'); eStatus.innerText = '今日尚未填寫'; }
 }
 
 function shareToLine() {
